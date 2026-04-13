@@ -1,0 +1,42 @@
+2024-03-04 06:00:01 INFO  [SCU-400] System power-on. Firmware v3.7.2. Running self-test.
+2024-03-04 06:00:16 INFO  [SCU-400] Self-test PASSED. All sensors nominal. Entering STANDBY.
+2024-03-04 06:01:03 INFO  [OPERATOR] Pump start command received. Operator ID: OPS-017.
+2024-03-04 06:01:03 INFO  [PUMP]     Motor energised. Running at minimum displacement (5%).
+2024-03-04 06:01:33 INFO  [PUMP]     Purge cycle complete. Pressure: 12 bar. Temp: 18 °C.
+2024-03-04 06:04:50 INFO  [SYSTEM]   Fluid temperature reached 40 °C. System ready for full load.
+2024-03-04 06:05:00 INFO  [OPERATOR] Pressure set-point increased to 180 bar.
+2024-03-04 06:05:45 INFO  [SYSTEM]   Operating pressure stable: 180 bar ± 2 bar. Flow: 68 L/min.
+2024-03-04 07:12:10 INFO  [SYSTEM]   Routine status. Pressure: 182 bar. Temp: 48 °C. Flow: 71 L/min.
+2024-03-04 08:30:17 INFO  [SYSTEM]   Routine status. Pressure: 179 bar. Temp: 51 °C. Flow: 69 L/min.
+2024-03-04 09:45:00 WARN  [TEMP]     WARN-T01: Fluid temperature rising. Current: 71 °C. Threshold: 70 °C.
+2024-03-04 09:45:00 INFO  [SCU-400]  Cooling fan speed increased to 100%.
+2024-03-04 09:47:30 WARN  [TEMP]     Temperature still elevated: 74 °C. Operator notified.
+2024-03-04 09:49:55 ERROR [TEMP]     FAULT-T02: Fluid temperature exceeded 80 °C (reading: 81 °C). Pump stopped automatically.
+2024-03-04 09:49:55 INFO  [PUMP]     Motor de-energised. Dump valve opened. System pressure dropping.
+2024-03-04 09:50:02 INFO  [SYSTEM]   System pressure at zero. Emergency stop state active.
+2024-03-04 09:52:15 INFO  [OPERATOR] Maintenance team notified. Investigating cooling circuit. Operator: OPS-017.
+2024-03-04 10:08:40 INFO  [MAINT]    Root cause identified: heat exchanger cooling fan fuse (F-FAN1) blown. Replaced with 10A fuse.
+2024-03-04 10:09:00 INFO  [MAINT]    Cooling fan confirmed running. Ambient air flow restored.
+2024-03-04 10:22:05 INFO  [SYSTEM]   Fluid temperature cooled to 48 °C. Fault reset permitted.
+2024-03-04 10:22:30 INFO  [OPERATOR] FAULT-T02 acknowledged and reset. Operator: OPS-017.
+2024-03-04 10:23:00 INFO  [OPERATOR] Standard startup procedure initiated.
+2024-03-04 10:23:00 INFO  [PUMP]     Motor energised. Running at minimum displacement (5%).
+2024-03-04 10:23:30 INFO  [PUMP]     Purge cycle complete.
+2024-03-04 10:26:00 INFO  [SYSTEM]   Fluid temperature reached 40 °C. System ready for full load.
+2024-03-04 10:26:30 INFO  [OPERATOR] Pressure set-point restored to 180 bar.
+2024-03-04 10:27:10 INFO  [SYSTEM]   Operating pressure stable: 181 bar. Temp: 43 °C. Flow: 70 L/min.
+2024-03-04 11:00:00 INFO  [SYSTEM]   Routine status. Pressure: 180 bar. Temp: 52 °C. Flow: 68 L/min.
+2024-03-04 12:30:00 INFO  [SYSTEM]   Routine status. Pressure: 179 bar. Temp: 53 °C. Flow: 67 L/min.
+2024-03-04 13:55:44 WARN  [SENSOR]   FAULT-S04: Sensor communication fault. Affected: PT-01 (pressure transducer, pump outlet).
+2024-03-04 13:55:44 INFO  [SCU-400]  System entering degraded pressure-monitoring mode. Max pressure limited to 200 bar.
+2024-03-04 13:56:00 INFO  [OPERATOR] FAULT-S04 logged. Maintenance dispatched. Operator: OPS-019.
+2024-03-04 14:10:22 INFO  [MAINT]    PT-01 wiring inspected. Terminal TB-3 pin 7 found loose (zero mA reading). Re-terminated.
+2024-03-04 14:12:45 INFO  [MAINT]    Loop current verified: 12.4 mA at current pressure (≈ 180 bar). Sensor confirmed good.
+2024-03-04 14:13:00 INFO  [OPERATOR] FAULT-S04 acknowledged and reset via SCU MENU > FAULTS > RESET ALL.
+2024-03-04 14:13:10 INFO  [SCU-400]  Sensor health check: all sensors GREEN. Exiting degraded mode.
+2024-03-04 14:13:30 INFO  [SYSTEM]   Normal operation resumed. Pressure limit restored to 280 bar.
+2024-03-04 15:30:00 INFO  [SYSTEM]   Routine status. Pressure: 182 bar. Temp: 50 °C. Flow: 71 L/min.
+2024-03-04 17:00:00 INFO  [OPERATOR] Planned shutdown initiated. Pressure ramped to zero.
+2024-03-04 17:00:45 INFO  [PUMP]     Motor de-energised. Shutdown complete.
+2024-03-04 17:01:00 INFO  [SCU-400]  System in STANDBY. Daily log closed. Total run time: 10 h 47 min.
+2024-03-04 17:01:00 INFO  [SYSTEM]   Event summary: 1× FAULT-T02 (overtemp, resolved), 1× FAULT-S04 (sensor comm, resolved).

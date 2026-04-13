@@ -1,0 +1,140 @@
+import { NavLink } from 'react-router-dom'
+import {
+  Cpu,
+  LayoutDashboard,
+  Upload,
+  FolderOpen,
+  Search,
+  MessageSquare,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Brain,
+  Zap,
+} from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { api } from '../../api/client'
+
+const NAV_ITEMS = [
+  { to: '/',          icon: LayoutDashboard, label: 'Dashboard'         },
+  { to: '/upload',    icon: Upload,          label: 'Upload Documents'  },
+  { to: '/documents', icon: FolderOpen,      label: 'Document Library'  },
+  { to: '/search',    icon: Search,          label: 'Semantic Search'   },
+  { to: '/ask',       icon: MessageSquare,   label: 'Ask a Question'    },
+]
+
+function NavItem({
+  to,
+  icon: Icon,
+  label,
+}: {
+  to: string
+  icon: React.ElementType
+  label: string
+}) {
+  return (
+    <NavLink
+      to={to}
+      end={to === '/'}  // exact match for the root route only
+      className={({ isActive }) =>
+        [
+          'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+          isActive
+            ? 'bg-blue-600 text-white shadow-sm'
+            : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70',
+        ].join(' ')
+      }
+    >
+      <Icon size={17} className="shrink-0" />
+      <span>{label}</span>
+    </NavLink>
+  )
+}
+
+/** Live backend health indicator rendered at the bottom of the sidebar. */
+function HealthStatus() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['health'],
+    queryFn: api.getHealth,
+    refetchInterval: 30_000,   // silent background refresh every 30 s
+    retry: 1,
+  })
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-slate-500 text-xs">
+        <Loader2 size={13} className="animate-spin" />
+        Connecting…
+      </div>
+    )
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="flex items-center gap-2 text-red-400 text-xs">
+        <XCircle size={13} />
+        Backend offline
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-emerald-400 text-xs">
+        <CheckCircle2 size={13} />
+        <span>Backend online</span>
+      </div>
+      <div className="flex items-center gap-2 text-slate-400 text-xs">
+        {data.llm_available ? (
+          <>
+            <Brain size={13} className="text-blue-400" />
+            <span className="text-blue-400">LLM enabled</span>
+          </>
+        ) : (
+          <>
+            <Zap size={13} className="text-amber-400" />
+            <span className="text-amber-400">Retrieval mode</span>
+          </>
+        )}
+      </div>
+      <div className="flex items-center gap-2 text-slate-500 text-xs pt-0.5">
+        <span>{data.indexed_documents} docs · {data.total_chunks} chunks</span>
+      </div>
+    </div>
+  )
+}
+
+export default function Sidebar() {
+  return (
+    <aside className="w-60 shrink-0 bg-gradient-to-b from-slate-900 to-slate-950 flex flex-col h-screen sticky top-0 border-r border-slate-800">
+
+      {/* ── Brand ──────────────────────────────────────────────────────── */}
+      <div className="px-4 py-5 border-b border-slate-800">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
+            <Cpu size={16} className="text-white" />
+          </div>
+          <div>
+            <div className="text-white font-semibold text-sm leading-none">EngRAG</div>
+            <div className="text-slate-500 text-xs mt-0.5">Knowledge Assistant</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Navigation ─────────────────────────────────────────────────── */}
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        {NAV_ITEMS.map((item) => (
+          <NavItem key={item.to} {...item} />
+        ))}
+      </nav>
+
+      {/* ── Footer: Health ─────────────────────────────────────────────── */}
+      <div className="px-4 py-4 border-t border-slate-800">
+        <div className="text-xs text-slate-600 font-medium uppercase tracking-wider mb-2">
+          System
+        </div>
+        <HealthStatus />
+      </div>
+    </aside>
+  )
+}

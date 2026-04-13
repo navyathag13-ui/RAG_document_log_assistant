@@ -1,0 +1,164 @@
+{
+  "_comment": "Sample requests for testing each API endpoint via Postman or curl.",
+
+  "health": {
+    "method": "GET",
+    "url": "http://127.0.0.1:8000/health"
+  },
+
+  "ingest_examples": [
+    {
+      "description": "Ingest the operations manual",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/ingest",
+      "body_type": "form-data",
+      "field": "file",
+      "file": "data/sample_docs/manual.txt"
+    },
+    {
+      "description": "Ingest the troubleshooting guide",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/ingest",
+      "body_type": "form-data",
+      "field": "file",
+      "file": "data/sample_docs/troubleshooting_guide.txt"
+    },
+    {
+      "description": "Ingest the system log",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/ingest",
+      "body_type": "form-data",
+      "field": "file",
+      "file": "data/sample_docs/sample_log.log"
+    },
+    {
+      "description": "Ingest the engineering note",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/ingest",
+      "body_type": "form-data",
+      "field": "file",
+      "file": "data/sample_docs/sample_engineering_note.md"
+    }
+  ],
+
+  "list_documents": {
+    "method": "GET",
+    "url": "http://127.0.0.1:8000/documents"
+  },
+
+  "search_queries": [
+    {
+      "description": "Search for pump overheating information",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/search",
+      "body": {
+        "query": "hydraulic pump overheating causes and solutions",
+        "top_k": 4
+      }
+    },
+    {
+      "description": "Search for voltage calibration",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/search",
+      "body": {
+        "query": "voltage calibration thresholds EDC",
+        "top_k": 3
+      }
+    },
+    {
+      "description": "Search for sensor fault procedures",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/search",
+      "body": {
+        "query": "sensor communication fault restart steps",
+        "top_k": 5
+      }
+    }
+  ],
+
+  "ask_queries": [
+    {
+      "description": "Ask about pump overheating",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/ask",
+      "body": {
+        "question": "What should I check if the hydraulic pump overheats?",
+        "top_k": 5
+      }
+    },
+    {
+      "description": "Ask about sensor fault restart",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/ask",
+      "body": {
+        "question": "What are the restart steps after a sensor communication fault?",
+        "top_k": 5
+      }
+    },
+    {
+      "description": "Ask about log failure analysis",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/ask",
+      "body": {
+        "question": "What does the log suggest about the failure cause on 2024-03-04?",
+        "top_k": 5
+      }
+    },
+    {
+      "description": "Ask about voltage calibration",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/ask",
+      "body": {
+        "question": "Which document mentions voltage calibration thresholds?",
+        "top_k": 4
+      }
+    },
+    {
+      "description": "Summarise pressure drop troubleshooting",
+      "method": "POST",
+      "url": "http://127.0.0.1:8000/ask",
+      "body": {
+        "question": "Summarise the troubleshooting steps related to pressure drop alerts.",
+        "top_k": 5
+      }
+    }
+  ],
+
+  "delete_example": {
+    "description": "Delete a document by its doc_id (get the ID from GET /documents first)",
+    "method": "DELETE",
+    "url": "http://127.0.0.1:8000/documents/{doc_id}"
+  },
+
+  "expected_search_response_shape": {
+    "query": "hydraulic pump overheating",
+    "total_results": 4,
+    "results": [
+      {
+        "chunk_id": "manual_txt_xxxxxx_chunk_3",
+        "text": "... chunk text excerpt ...",
+        "score": 0.87,
+        "doc_name": "manual.txt",
+        "file_type": "txt",
+        "chunk_index": 3,
+        "source_path": "/tmp/tmpXXXX.txt"
+      }
+    ]
+  },
+
+  "expected_ask_response_shape": {
+    "question": "What should I check if the hydraulic pump overheats?",
+    "answer": "Based on the retrieved documents, if the hydraulic pump overheats you should: ...",
+    "llm_used": true,
+    "retrieval_count": 5,
+    "sources": [
+      {
+        "chunk_id": "troubleshooting_guide_txt_xxxxxx_chunk_2",
+        "doc_name": "troubleshooting_guide.txt",
+        "file_type": "txt",
+        "text_excerpt": "Step 1 — Verify cooling circuit operation ...",
+        "score": 0.91
+      }
+    ]
+  }
+}

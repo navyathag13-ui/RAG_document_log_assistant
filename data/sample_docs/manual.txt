@@ -1,0 +1,148 @@
+HYDRAULIC SYSTEM OPERATION MANUAL
+Model: HX-9000 Series
+Revision: 4.2  |  Issued: 2023-08-15
+Classification: Internal Technical Document
+
+═══════════════════════════════════════════════════════════════════
+SECTION 1: SYSTEM OVERVIEW
+═══════════════════════════════════════════════════════════════════
+
+The HX-9000 hydraulic system is a closed-loop, variable-pressure power unit
+designed for precision manufacturing and heavy industrial applications. The
+system operates at working pressures from 50 bar to 350 bar and supports
+flow rates up to 120 L/min.
+
+Key subsystems:
+  - Hydraulic pump (axial-piston, variable displacement)
+  - Proportional pressure-control valve (PPCV-12)
+  - Servo control unit (SCU-400)
+  - Heat exchanger with bypass thermostat
+  - Reservoir (150 L, stainless-lined)
+  - Return-line filter (10 µm nominal, 16 µm absolute)
+
+The servo control unit monitors system pressure, temperature, and flow rate
+at 100 Hz and adjusts pump displacement via the electronic displacement
+controller (EDC).
+
+═══════════════════════════════════════════════════════════════════
+SECTION 2: STARTUP PROCEDURE
+═══════════════════════════════════════════════════════════════════
+
+Follow these steps every time the system is started from a cold state.
+
+2.1  Pre-start checks
+  a) Verify reservoir fluid level is between MIN and MAX marks on the sight glass.
+  b) Check that the return-line filter indicator is in the GREEN zone.
+     If the indicator is RED, replace the filter element before starting.
+  c) Confirm all pressure-relief valves are correctly seated (torque: 35 N·m).
+  d) Inspect hydraulic hoses for cracks, chafing, or oil seepage. Do not start
+     if visible leaks are present.
+  e) Ensure the servo control unit (SCU-400) display shows "STANDBY".
+
+2.2  Start sequence
+  1. Set main power switch to ON.  SCU-400 performs a 15-second self-test.
+  2. Wait for the "SYSTEM OK" message on the SCU display.
+     If "FAULT" is displayed, record the fault code and consult Section 5.
+  3. Press the PUMP START button. The pump runs at minimum displacement for
+     30 seconds to circulate fluid and purge air.
+  4. Gradually increase system pressure to operating set-point using the
+     pressure-control potentiometer. Do not exceed 10 bar per second ramp rate.
+  5. Verify fluid temperature is rising toward operating range (40–55 °C).
+  6. When temperature reaches 40 °C, the system is ready for full-load operation.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 3: SHUTDOWN PROCEDURE
+═══════════════════════════════════════════════════════════════════
+
+3.1  Planned shutdown
+  1. Reduce system pressure to zero using the pressure-control potentiometer.
+  2. Press the PUMP STOP button. Allow the pump to decelerate for 10 seconds.
+  3. Set main power switch to OFF.
+  4. After shutdown, check fluid level and top up if necessary.
+
+3.2  Emergency shutdown
+  Press the red EMERGENCY STOP button on the control panel. This simultaneously
+  de-energises the pump motor and opens the dump valve, dropping pressure to zero
+  within 2 seconds. After an emergency stop, do not restart until the cause of
+  the emergency has been identified and corrected.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 4: OPERATING LIMITS AND THRESHOLDS
+═══════════════════════════════════════════════════════════════════
+
+4.1  Pressure
+  Normal operating range:   100 – 280 bar
+  Maximum allowable:        350 bar (relief valve set-point)
+  Low-pressure alarm:        80 bar
+  High-pressure alarm:      310 bar
+
+4.2  Temperature
+  Cold-start minimum:        15 °C (system will not reach full pressure below this)
+  Normal operating range:    40 – 55 °C
+  High-temperature warning:  70 °C  → SCU generates WARN-T01
+  High-temperature alarm:    80 °C  → SCU generates FAULT-T02, pump stops automatically
+
+4.3  Voltage calibration thresholds (EDC electronics)
+  Supply voltage:            24 VDC nominal
+  Acceptable range:          22.5 – 26.5 VDC
+  Under-voltage alarm:       < 22.0 VDC  → FAULT-V01
+  Over-voltage alarm:        > 27.0 VDC  → FAULT-V02
+  EDC signal output range:   0 – 10 VDC (represents 0% – 100% pump displacement)
+  Zero-point calibration:    Adjust R17 trimmer until output reads 0.00 ± 0.05 VDC
+                             with zero displacement command.
+  Full-scale calibration:    Adjust R18 trimmer until output reads 10.00 ± 0.05 VDC
+                             with 100% displacement command.
+  Calibration interval:      Every 2000 operating hours or after EDC replacement.
+
+4.4  Flow rate
+  Minimum continuous:       10 L/min
+  Maximum rated:           120 L/min
+  Low-flow alarm:           < 8 L/min for > 5 seconds → WARN-F01
+
+═══════════════════════════════════════════════════════════════════
+SECTION 5: FAULT CODES
+═══════════════════════════════════════════════════════════════════
+
+FAULT-T02  Fluid temperature exceeded 80 °C. Pump stopped automatically.
+           Action: Allow fluid to cool to < 50 °C, then investigate cooling circuit.
+
+FAULT-V01  EDC supply voltage below 22.0 VDC.
+           Action: Check 24V power supply output; inspect wiring for resistance faults.
+
+FAULT-V02  EDC supply voltage above 27.0 VDC.
+           Action: Check 24V power supply regulation; replace power supply if faulty.
+
+FAULT-P03  Pump pressure failed to reach set-point within 60 seconds.
+           Action: Check pump displacement linkage; verify PPCV-12 operation.
+
+FAULT-S04  Sensor communication fault — loss of signal from pressure transducer PT-01.
+           Action: Check transducer wiring (4–20 mA loop); replace transducer if open circuit.
+
+WARN-T01   Fluid temperature above 70 °C.
+           Action: Verify cooling circuit flow; check heat exchanger for fouling.
+
+WARN-F01   Low flow rate detected.
+           Action: Check for partially closed isolating valves; inspect filter for blockage.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 6: MAINTENANCE SCHEDULE
+═══════════════════════════════════════════════════════════════════
+
+  Every 500 hours:
+    - Replace return-line filter element
+    - Check all hose connections for torque and leaks
+    - Verify reservoir fluid level and condition
+
+  Every 1000 hours:
+    - Sample hydraulic fluid for contamination analysis (target: ISO 4406 class 16/14/11)
+    - Inspect pump shaft seal for leakage
+    - Verify pressure-relief valve set-points with calibrated gauge
+
+  Every 2000 hours:
+    - Perform full EDC voltage calibration (Section 4.3)
+    - Replace heat exchanger gaskets
+    - Full pump inspection per Pump Service Manual HS-9000-P
+
+  Annual:
+    - Complete fluid change
+    - Hydrostatic test of high-pressure lines (1.5 × max working pressure)

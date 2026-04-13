@@ -1,0 +1,157 @@
+HYDRAULIC SYSTEM TROUBLESHOOTING GUIDE
+HX-9000 Series  |  Document: TS-HX9000-v3
+Revised: 2024-01-10
+
+This guide addresses the most common fault conditions observed in the field.
+Work through each issue systematically; do not skip steps.
+
+═══════════════════════════════════════════════════════════════════
+ISSUE 1: HYDRAULIC PUMP OVERHEATING
+═══════════════════════════════════════════════════════════════════
+
+Symptom: Fluid temperature exceeds 70 °C (WARN-T01) or 80 °C (FAULT-T02).
+         Pump may have stopped automatically.
+
+Possible causes and checks:
+
+Step 1 — Verify cooling circuit operation
+  a) Check that the heat exchanger cooling fan is running. If the fan motor is
+     stopped, inspect the fan thermal fuse (rated 10 A) on the control panel.
+     Replace if blown.
+  b) Ensure coolant flow through the heat exchanger is unobstructed. The water
+     inlet and outlet valves must be fully open.
+  c) Clean heat exchanger fins if fouling or debris is visible. Use compressed
+     air at ≤ 4 bar. Do not use water jets on the electrical cabinet.
+
+Step 2 — Check fluid viscosity and level
+  a) Low fluid level reduces cooling capacity. Top up to MAX mark.
+  b) Using the wrong grade of hydraulic oil increases internal leakage and heat
+     generation. Required grade: ISO VG 46. Check fluid documentation.
+
+Step 3 — Check pump displacement and loading
+  a) If the system is operating at maximum displacement (100%) continuously,
+     reduce duty cycle or install a larger reservoir.
+  b) Inspect for internal leakage: if case drain flow exceeds 5 L/min, the
+     pump may need rebuild or replacement.
+
+Step 4 — Restart after overtemperature fault
+  1. Allow fluid to cool to below 50 °C (monitor on SCU display).
+  2. Verify and resolve the root cause from Steps 1–3 above.
+  3. Press FAULT RESET on the SCU-400 panel.
+  4. Restart system using the standard startup procedure (see Manual Section 2).
+  5. Monitor temperature for the first 30 minutes of operation.
+
+═══════════════════════════════════════════════════════════════════
+ISSUE 2: SENSOR COMMUNICATION FAULT (FAULT-S04)
+═══════════════════════════════════════════════════════════════════
+
+Symptom: SCU displays FAULT-S04. "SENSOR COMM FAULT" on display.
+         System may continue running in degraded mode or stop, depending on
+         which sensor is affected.
+
+Step 1 — Identify the affected sensor
+  The SCU-400 detail screen (press INFO on FAULT-S04 display) shows the
+  sensor ID. Common sensors:
+    PT-01  Pressure transducer, pump outlet (4–20 mA, 0–400 bar)
+    PT-02  Pressure transducer, actuator port A (4–20 mA, 0–400 bar)
+    TT-01  Temperature transmitter, reservoir (4–20 mA, 0–120 °C)
+    FT-01  Flow transmitter (4–20 mA, 0–150 L/min)
+
+Step 2 — Check wiring and connections
+  a) Inspect terminal block TB-3 in the control panel for loose or corroded
+     connections. Re-terminate if needed (torque: 0.8 N·m on M3 terminals).
+  b) Measure loop current with a clamp meter:
+       < 3.8 mA  → open circuit or sensor failure
+       > 20.5 mA → short circuit or faulty transmitter
+     Normal range: 4 mA (zero scale) to 20 mA (full scale).
+
+Step 3 — Sensor replacement
+  a) Isolate the sensor loop by opening CB-3 on the control panel.
+  b) Remove the sensor and bench-test against a reference.
+  c) Install new sensor; tighten to specified torque (PT-01/PT-02: 25 N·m; TT-01: 15 N·m).
+  d) Re-calibrate using SCU calibration menu (MENU > SENSORS > CALIBRATE).
+
+Step 4 — Restart steps after sensor communication fault
+  1. Close CB-3 after confirmed sensor replacement or repair.
+  2. On the SCU-400, navigate to: MENU > FAULTS > RESET ALL.
+  3. Confirm reset with the ENTER key.
+  4. The SCU performs a sensor health check (10 seconds). Verify all sensors
+     show GREEN status on the diagnostics screen.
+  5. Return to STANDBY mode, then follow the standard startup procedure.
+  6. Verify live sensor readings are within expected ranges before loading.
+
+═══════════════════════════════════════════════════════════════════
+ISSUE 3: PRESSURE DROP ALERT
+═══════════════════════════════════════════════════════════════════
+
+Symptom: System pressure drops below set-point during operation.
+         Possible SCU warnings: WARN-P01 (10% below set-point) or
+         FAULT-P03 (failed to reach set-point in 60 s).
+
+Step 1 — Check for external leaks
+  Walk the full pipe circuit. Any visible oil spray or pooling indicates an
+  external leak. Isolate the affected section immediately; do not continue
+  operating a leaking system.
+
+Step 2 — Check for internal bypass
+  a) If no external leak is found, internal leakage through a relief valve,
+     counter-balance valve, or the pump itself is likely.
+  b) Check relief valve RV-01 set-point with a calibrated gauge (set-point: 280 bar).
+     If relief opens below 260 bar, readjust or replace RV-01.
+
+Step 3 — Inspect pump output
+  a) At full displacement, measure pump output pressure and flow.
+     Compare to rated values: 350 bar max, 120 L/min at 1500 rpm.
+  b) If pump output is significantly below specification, pump wear or
+     damage is likely. Refer to Pump Service Manual HS-9000-P.
+
+Step 4 — Check isolating valves
+  Confirm all isolating valves in the high-pressure circuit are fully open.
+  A partially closed valve can cause localised pressure drop and heat buildup.
+
+Step 5 — Resolve and restart after pressure drop fault
+  1. Correct the identified root cause (leak repair, valve adjustment, etc.).
+  2. On SCU-400: MENU > FAULTS > CLEAR ACTIVE.
+  3. Ramp pressure slowly (< 10 bar/s) to set-point and confirm stability.
+  4. Log the incident in the maintenance record with date, fault code, and action taken.
+
+═══════════════════════════════════════════════════════════════════
+ISSUE 4: PUMP WILL NOT START
+═══════════════════════════════════════════════════════════════════
+
+Symptom: PUMP START button pressed; pump motor does not run.
+
+Step 1 — Check power supply
+  a) Verify main supply voltage at the main disconnect: expected 380–415 VAC 3-phase.
+  b) Check motor protection relay MPR-1: if tripped (indicator red), reset once.
+     If it trips again immediately, investigate for motor overcurrent or winding fault.
+
+Step 2 — Check interlock chain
+  The pump will not start if any of these interlocks are active:
+    - Emergency stop button engaged (pull to reset)
+    - Low fluid level switch LSH-1 open (fill reservoir)
+    - High-temperature lock-out (fluid must cool to < 60 °C)
+    - SCU in FAULT state (clear active faults first)
+
+Step 3 — Control circuit check
+  Check 24 VDC control fuse F3 (2 A) in the control panel. Replace if blown.
+
+═══════════════════════════════════════════════════════════════════
+ISSUE 5: ERRATIC PRESSURE CONTROL
+═══════════════════════════════════════════════════════════════════
+
+Symptom: System pressure oscillates ± 15 bar or more around set-point.
+
+Step 1 — Check for air in the system
+  Air in the hydraulic circuit causes compressibility-related pressure
+  oscillation. Bleed the system by cycling the pressure control potentiometer
+  between minimum and maximum pressure 5 times at slow load.
+
+Step 2 — Check SCU PID gain settings
+  Navigate to: SCU MENU > CONTROL > PID PARAMETERS.
+  Default values:  Kp = 2.5,  Ki = 0.8,  Kd = 0.1.
+  If gains have been altered, restore defaults and observe.
+
+Step 3 — Inspect PPCV-12 proportional valve
+  A worn or contaminated PPCV-12 spool can cause hunting.
+  Flush the valve with clean filtered oil; replace if oscillation persists.

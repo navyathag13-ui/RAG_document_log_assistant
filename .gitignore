@@ -1,0 +1,43 @@
+# Environment
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Vector database (persisted locally, large)
+data/chroma_db/
+
+# Uploaded / ingested files (not sample docs)
+data/uploads/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+!data/sample_docs/*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
