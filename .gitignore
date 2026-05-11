@@ -1,3 +1,6 @@
+# Tool metadata
+.claude/
+
 # Environment
 .env
 .env.local
