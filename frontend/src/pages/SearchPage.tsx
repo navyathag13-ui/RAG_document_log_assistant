@@ -1,7 +1,15 @@
+/**
+ * SearchPage (v2) — semantic search with optional hybrid BM25 toggle.
+ *
+ * Adds to v1:
+ *   - Hybrid toggle: blend BM25 keyword matching with semantic similarity
+ *   - Retrieval mode badge on results
+ *   - Alpha slider shown when hybrid mode is active
+ */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
-import { Search, ChevronDown, ChevronUp, Upload } from 'lucide-react'
+import { Search, ChevronDown, ChevronUp, Upload, Zap, GitMerge } from 'lucide-react'
 import { api } from '../api/client'
 import type { ChunkResult, SearchResponse } from '../types'
 import { scoreColor, scoreBarColor } from '../types'
@@ -22,22 +30,18 @@ const EXAMPLE_QUERIES = [
 
 const TOP_K_OPTIONS = [3, 5, 8, 10]
 
-// ── Single result card ───────────────────────────────────────────────────────
+// ── Single result card ────────────────────────────────────────────────────────
 
 function ResultCard({ result, rank }: { result: ChunkResult; rank: number }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
     <Card className="overflow-hidden animate-slide-up">
-      {/* Header row */}
       <div className="flex items-start gap-4 p-4 border-b border-slate-100">
-        {/* Rank badge */}
         <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
           {rank}
         </div>
-
         <div className="flex-1 min-w-0">
-          {/* Doc name + type */}
           <div className="flex items-center gap-2 flex-wrap mb-1.5">
             <Badge variant="filetype" fileType={result.file_type}>
               {result.file_type.toUpperCase()}
@@ -45,12 +49,8 @@ function ResultCard({ result, rank }: { result: ChunkResult; rank: number }) {
             <span className="text-sm font-semibold text-slate-700 truncate">
               {result.doc_name}
             </span>
-            <span className="text-xs text-slate-400 font-mono">
-              chunk #{result.chunk_index}
-            </span>
+            <span className="text-xs text-slate-400 font-mono">chunk #{result.chunk_index}</span>
           </div>
-
-          {/* Score bar */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-500 shrink-0">Relevance</span>
             <ScoreBar score={result.score} />
@@ -58,40 +58,23 @@ function ResultCard({ result, rank }: { result: ChunkResult; rank: number }) {
         </div>
       </div>
 
-      {/* Chunk text */}
       <div className="p-4">
-        <p
-          className={`text-sm text-slate-700 leading-relaxed whitespace-pre-wrap font-mono text-xs ${
-            expanded ? '' : 'line-clamp-4'
-          }`}
-        >
+        <p className={`text-sm text-slate-700 leading-relaxed whitespace-pre-wrap font-mono text-xs ${expanded ? '' : 'line-clamp-4'}`}>
           {result.text}
         </p>
-
         {result.text.length > 300 && (
           <button
             onClick={() => setExpanded(!expanded)}
             className="mt-2 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
           >
-            {expanded ? (
-              <>
-                <ChevronUp size={12} /> Show less
-              </>
-            ) : (
-              <>
-                <ChevronDown size={12} /> Show full chunk
-              </>
-            )}
+            {expanded ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> Show full chunk</>}
           </button>
         )}
       </div>
 
-      {/* Score footer */}
       <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
         <span className="text-xs font-mono text-slate-400 truncate">{result.chunk_id}</span>
-        <span
-          className={`text-xs font-bold font-mono ${scoreColor(result.score)}`}
-        >
+        <span className={`text-xs font-bold font-mono ${scoreColor(result.score)}`}>
           {(result.score * 100).toFixed(1)}% match
         </span>
       </div>
@@ -99,7 +82,7 @@ function ResultCard({ result, rank }: { result: ChunkResult; rank: number }) {
   )
 }
 
-// ── Score distribution mini-chart ────────────────────────────────────────────
+// ── Score distribution mini-chart ─────────────────────────────────────────────
 
 function ScoreDistribution({ results }: { results: ChunkResult[] }) {
   return (
@@ -120,13 +103,19 @@ function ScoreDistribution({ results }: { results: ChunkResult[] }) {
 
 export default function SearchPage() {
   const navigate = useNavigate()
-
   const [query, setQuery] = useState('')
   const [topK, setTopK] = useState(5)
+  const [useHybrid, setUseHybrid] = useState(false)
+  const [hybridAlpha, setHybridAlpha] = useState(0.7)
   const [searchResponse, setSearchResponse] = useState<SearchResponse | null>(null)
 
-  const searchMutation = useMutation<SearchResponse, Error, { query: string; topK: number }>({
-    mutationFn: ({ query, topK }) => api.search(query, topK),
+  const searchMutation = useMutation<
+    SearchResponse,
+    Error,
+    { query: string; topK: number; useHybrid: boolean; alpha: number }
+  >({
+    mutationFn: ({ query, topK, useHybrid, alpha }) =>
+      api.search(query, topK, useHybrid, alpha),
     onSuccess: (data) => setSearchResponse(data),
   })
 
@@ -134,17 +123,13 @@ export default function SearchPage() {
     const q = query.trim()
     if (!q) return
     setSearchResponse(null)
-    searchMutation.mutate({ query: q, topK })
+    searchMutation.mutate({ query: q, topK, useHybrid, alpha: hybridAlpha })
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSearch()
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSearch() }
   }
 
-  // ── Render ────────────────────────────────────────────────────────────
   return (
     <div className="max-w-4xl mx-auto px-8 py-8">
 
@@ -153,11 +138,11 @@ export default function SearchPage() {
         <h1 className="text-2xl font-bold text-slate-900">Semantic Search</h1>
         <p className="text-slate-500 mt-1 text-sm">
           Retrieve the most relevant document chunks using natural language queries.
-          Results are ranked by cosine similarity score.
+          Enable hybrid mode to blend BM25 keyword matching with semantic similarity.
         </p>
       </div>
 
-      {/* ── Search input card ───────────────────────────────────────── */}
+      {/* ── Search input card ─────────────────────────────────────────── */}
       <Card className="p-5 mb-6">
         {/* Input */}
         <div className="relative">
@@ -174,24 +159,35 @@ export default function SearchPage() {
 
         {/* Options row */}
         <div className="flex items-center justify-between mt-3 flex-wrap gap-3">
-          {/* Top-K selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-medium">Top results:</span>
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Top-K */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-slate-500 font-medium">Top:</span>
               {TOP_K_OPTIONS.map((n) => (
                 <button
                   key={n}
                   onClick={() => setTopK(n)}
                   className={`w-8 h-7 rounded-md text-xs font-semibold transition-colors ${
-                    topK === n
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    topK === n ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   {n}
                 </button>
               ))}
             </div>
+
+            {/* Hybrid toggle */}
+            <button
+              onClick={() => setUseHybrid(!useHybrid)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                useHybrid
+                  ? 'bg-violet-600 text-white border-violet-600'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-violet-400'
+              }`}
+            >
+              {useHybrid ? <GitMerge size={12} /> : <Zap size={12} />}
+              {useHybrid ? 'Hybrid ON' : 'Hybrid'}
+            </button>
           </div>
 
           <Button
@@ -205,6 +201,31 @@ export default function SearchPage() {
           </Button>
         </div>
 
+        {/* Hybrid alpha slider */}
+        {useHybrid && (
+          <div className="mt-3 pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-slate-600">
+                Blend: {Math.round(hybridAlpha * 100)}% semantic + {Math.round((1 - hybridAlpha) * 100)}% keyword (BM25)
+              </span>
+              <span className="text-xs text-slate-400 font-mono">α = {hybridAlpha.toFixed(1)}</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.1}
+              value={hybridAlpha}
+              onChange={(e) => setHybridAlpha(Number(e.target.value))}
+              className="w-full accent-violet-600"
+            />
+            <div className="flex justify-between text-xs text-slate-400 mt-0.5">
+              <span>Pure BM25</span>
+              <span>Pure Semantic</span>
+            </div>
+          </div>
+        )}
+
         {/* Example query chips */}
         {!searchResponse && !searchMutation.isPending && (
           <div className="mt-3 pt-3 border-t border-slate-100">
@@ -216,7 +237,7 @@ export default function SearchPage() {
                   onClick={() => {
                     setQuery(q)
                     setSearchResponse(null)
-                    searchMutation.mutate({ query: q, topK })
+                    searchMutation.mutate({ query: q, topK, useHybrid, alpha: hybridAlpha })
                   }}
                   className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 rounded-full text-xs transition-colors"
                 >
@@ -228,15 +249,17 @@ export default function SearchPage() {
         )}
       </Card>
 
-      {/* ── Loading ─────────────────────────────────────────────────── */}
+      {/* ── Loading ───────────────────────────────────────────────────── */}
       {searchMutation.isPending && (
         <div className="flex items-center justify-center py-16 gap-3 text-slate-400">
           <Spinner size={18} />
-          <span className="text-sm">Searching {topK} most relevant chunks…</span>
+          <span className="text-sm">
+            {useHybrid ? `Hybrid search (semantic + BM25)…` : `Searching ${topK} most relevant chunks…`}
+          </span>
         </div>
       )}
 
-      {/* ── Error ───────────────────────────────────────────────────── */}
+      {/* ── Error ─────────────────────────────────────────────────────── */}
       {searchMutation.isError && (
         <Card accent="red" className="p-5">
           <p className="text-sm font-medium text-red-700">Search failed</p>
@@ -255,20 +278,23 @@ export default function SearchPage() {
         </Card>
       )}
 
-      {/* ── Results ─────────────────────────────────────────────────── */}
+      {/* ── Results ───────────────────────────────────────────────────── */}
       {searchResponse && !searchMutation.isPending && (
         <div className="animate-fade-in">
-          {/* Results meta bar */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <div className="flex items-center gap-3">
               <h2 className="text-sm font-semibold text-slate-700">
                 {searchResponse.total_results} chunk{searchResponse.total_results !== 1 ? 's' : ''} retrieved
               </h2>
-              <span className="text-xs text-slate-400">
-                for "{searchResponse.query}"
+              <span className="text-xs text-slate-400">for "{searchResponse.query}"</span>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                searchResponse.retrieval_mode === 'hybrid'
+                  ? 'bg-violet-100 text-violet-700'
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {searchResponse.retrieval_mode}
               </span>
             </div>
-            {/* Mini score distribution */}
             {searchResponse.results.length > 1 && (
               <div className="w-32">
                 <ScoreDistribution results={searchResponse.results} />
@@ -276,7 +302,6 @@ export default function SearchPage() {
             )}
           </div>
 
-          {/* Empty results */}
           {searchResponse.results.length === 0 ? (
             <Card>
               <EmptyState

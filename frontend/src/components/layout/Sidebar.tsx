@@ -6,6 +6,9 @@ import {
   FolderOpen,
   Search,
   MessageSquare,
+  GitCompare,
+  BarChart3,
+  History,
   CheckCircle2,
   XCircle,
   Loader2,
@@ -15,13 +18,35 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../../api/client'
 
-const NAV_ITEMS = [
-  { to: '/',          icon: LayoutDashboard, label: 'Dashboard'         },
-  { to: '/upload',    icon: Upload,          label: 'Upload Documents'  },
-  { to: '/documents', icon: FolderOpen,      label: 'Document Library'  },
-  { to: '/search',    icon: Search,          label: 'Semantic Search'   },
-  { to: '/ask',       icon: MessageSquare,   label: 'Ask a Question'    },
+// ── Navigation structure ───────────────────────────────────────────────────────
+
+const NAV_SECTIONS = [
+  {
+    label: 'Knowledge',
+    items: [
+      { to: '/',          icon: LayoutDashboard, label: 'Dashboard'         },
+      { to: '/upload',    icon: Upload,          label: 'Upload Documents'  },
+      { to: '/documents', icon: FolderOpen,      label: 'Document Library'  },
+    ],
+  },
+  {
+    label: 'Query',
+    items: [
+      { to: '/search', icon: Search,       label: 'Semantic Search'     },
+      { to: '/ask',    icon: MessageSquare, label: 'Ask a Question'     },
+    ],
+  },
+  {
+    label: 'Experiment',
+    items: [
+      { to: '/compare',     icon: GitCompare, label: 'Compare Prompts'    },
+      { to: '/evaluation',  icon: BarChart3,  label: 'Eval Dashboard'     },
+      { to: '/experiments', icon: History,    label: 'Experiment History' },
+    ],
+  },
 ]
+
+// ── NavItem ────────────────────────────────────────────────────────────────────
 
 function NavItem({
   to,
@@ -35,7 +60,7 @@ function NavItem({
   return (
     <NavLink
       to={to}
-      end={to === '/'}  // exact match for the root route only
+      end={to === '/'}
       className={({ isActive }) =>
         [
           'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
@@ -51,12 +76,13 @@ function NavItem({
   )
 }
 
-/** Live backend health indicator rendered at the bottom of the sidebar. */
+// ── Health status footer ───────────────────────────────────────────────────────
+
 function HealthStatus() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['health'],
     queryFn: api.getHealth,
-    refetchInterval: 30_000,   // silent background refresh every 30 s
+    refetchInterval: 30_000,
     retry: 1,
   })
 
@@ -82,7 +108,7 @@ function HealthStatus() {
     <div className="space-y-2">
       <div className="flex items-center gap-2 text-emerald-400 text-xs">
         <CheckCircle2 size={13} />
-        <span>Backend online</span>
+        <span>Backend online · v{data.version}</span>
       </div>
       <div className="flex items-center gap-2 text-slate-400 text-xs">
         {data.llm_available ? (
@@ -104,11 +130,13 @@ function HealthStatus() {
   )
 }
 
+// ── Sidebar ────────────────────────────────────────────────────────────────────
+
 export default function Sidebar() {
   return (
     <aside className="w-60 shrink-0 bg-gradient-to-b from-slate-900 to-slate-950 flex flex-col h-screen sticky top-0 border-r border-slate-800">
 
-      {/* ── Brand ──────────────────────────────────────────────────────── */}
+      {/* Brand */}
       <div className="px-4 py-5 border-b border-slate-800">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
@@ -121,14 +149,23 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* ── Navigation ─────────────────────────────────────────────────── */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map((item) => (
-          <NavItem key={item.to} {...item} />
+      {/* Navigation sections */}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.label}>
+            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider px-3 mb-1">
+              {section.label}
+            </p>
+            <div className="space-y-0.5">
+              {section.items.map((item) => (
+                <NavItem key={item.to} {...item} />
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 
-      {/* ── Footer: Health ─────────────────────────────────────────────── */}
+      {/* Footer: health */}
       <div className="px-4 py-4 border-t border-slate-800">
         <div className="text-xs text-slate-600 font-medium uppercase tracking-wider mb-2">
           System

@@ -11,6 +11,9 @@ import {
   ArrowRight,
   FileText,
   Cpu,
+  GitCompare,
+  BarChart3,
+  FlaskConical,
 } from 'lucide-react'
 import { api } from '../api/client'
 import { formatDate } from '../types'
@@ -94,6 +97,11 @@ export default function DashboardPage() {
   const { data: docs } = useQuery({
     queryKey: ['documents'],
     queryFn: api.getDocuments,
+  })
+
+  const { data: expStats } = useQuery({
+    queryKey: ['experiments', 'stats'],
+    queryFn: api.getExperimentStats,
   })
 
   const recentDocs = docs?.documents.slice(0, 4) ?? []
@@ -182,7 +190,7 @@ export default function DashboardPage() {
           />
           <QuickAction
             title="Semantic Search"
-            description="Find the most relevant chunks across all indexed content using natural language."
+            description="Find the most relevant chunks. Toggle hybrid BM25 + semantic for better keyword matches."
             icon={<Search size={18} className="text-violet-600" />}
             iconBg="bg-violet-50"
             label="Open Search →"
@@ -190,14 +198,76 @@ export default function DashboardPage() {
           />
           <QuickAction
             title="Ask a Question"
-            description="Get grounded, source-linked answers from your documents using the RAG pipeline."
+            description="Get grounded, source-linked answers. Pick a prompt template and see eval scores."
             icon={<MessageSquare size={18} className="text-emerald-600" />}
             iconBg="bg-emerald-50"
             label="Ask Now →"
             onClick={() => navigate('/ask')}
           />
+          <QuickAction
+            title="Compare Prompts"
+            description="Run the same question through multiple prompt templates and compare answers side-by-side."
+            icon={<GitCompare size={18} className="text-rose-600" />}
+            iconBg="bg-rose-50"
+            label="Compare →"
+            onClick={() => navigate('/compare')}
+          />
+          <QuickAction
+            title="Eval Dashboard"
+            description="Review aggregated evaluation scores, the template leaderboard, and run a full benchmark."
+            icon={<BarChart3 size={18} className="text-amber-600" />}
+            iconBg="bg-amber-50"
+            label="View Eval →"
+            onClick={() => navigate('/evaluation')}
+          />
+          <QuickAction
+            title="Experiment History"
+            description="Browse every Ask, Compare, and Benchmark run with scores and full answers."
+            icon={<FlaskConical size={18} className="text-teal-600" />}
+            iconBg="bg-teal-50"
+            label="View History →"
+            onClick={() => navigate('/experiments')}
+          />
         </div>
       </div>
+
+      {/* ── Experiment stats strip ────────────────────────────────────── */}
+      {expStats && expStats.total_runs > 0 && (
+        <div className="mb-8">
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-3">
+            Evaluation Snapshot
+          </h2>
+          <Card className="p-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { label: 'Experiment Runs',    value: expStats.total_runs },
+                { label: 'Avg Overall Score',  value: `${Math.round(expStats.avg_overall_score * 100)} / 100` },
+                { label: 'Avg Groundedness',   value: `${Math.round(expStats.avg_groundedness * 100)}%` },
+                { label: 'Avg Relevance',      value: `${Math.round(expStats.avg_relevance * 100)}%` },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="text-xs text-slate-500">{s.label}</p>
+                  <p className="text-xl font-bold text-slate-900 mt-0.5">{s.value}</p>
+                </div>
+              ))}
+            </div>
+            {expStats.by_template.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <p className="text-xs font-semibold text-slate-500 mb-2">Template Leaderboard</p>
+                <div className="flex flex-wrap gap-2">
+                  {expStats.by_template.slice(0, 3).map((t, i) => (
+                    <div key={t.template_name} className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
+                      <span className="text-xs">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
+                      <span className="text-xs font-semibold text-slate-700">{t.template_name}</span>
+                      <span className="text-xs font-bold text-blue-600">{Math.round((t.avg_score ?? 0) * 100)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* ── How it works ──────────────────────────────────────────────── */}
       <div className="mb-8">
@@ -207,10 +277,11 @@ export default function DashboardPage() {
         <Card className="p-5">
           <div className="flex flex-wrap items-center gap-0">
             {[
-              { step: '01', label: 'Upload', desc: 'Add .txt, .md, .log, or .pdf files' },
-              { step: '02', label: 'Index',  desc: 'Chunks embedded into vector store'  },
-              { step: '03', label: 'Search', desc: 'Retrieve semantically similar chunks'},
-              { step: '04', label: 'Answer', desc: 'LLM or retrieval-grounded response' },
+              { step: '01', label: 'Upload',   desc: 'Add .txt, .md, .log, or .pdf files'   },
+              { step: '02', label: 'Index',    desc: 'Chunks embedded into vector store'    },
+              { step: '03', label: 'Retrieve', desc: 'Semantic or hybrid BM25 + semantic'   },
+              { step: '04', label: 'Answer',   desc: 'LLM or retrieval-grounded response'   },
+              { step: '05', label: 'Evaluate', desc: 'Auto-score groundedness & quality'    },
             ].map((s, i, arr) => (
               <div key={s.step} className="flex items-center">
                 <div className="flex items-center gap-3 px-4 py-2">

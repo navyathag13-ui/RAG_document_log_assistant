@@ -1,6 +1,14 @@
+/**
+ * AskPage (v2) — grounded Q&A with template selector and inline evaluation scores.
+ *
+ * Adds to v1:
+ *   - Prompt template dropdown (populated from GET /prompts)
+ *   - Inline eval score card shown beneath each answer
+ *   - Link to Experiment History for the saved run
+ */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import {
   MessageSquare,
   Brain,
@@ -10,14 +18,16 @@ import {
   Upload,
   Send,
   BookOpen,
+  History,
 } from 'lucide-react'
 import { api } from '../api/client'
-import type { AskResponse, SourceChunk } from '../types'
+import type { AskResponse, SourceChunk, PromptTemplate } from '../types'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import ScoreBar from '../components/ui/ScoreBar'
 import Spinner from '../components/ui/Spinner'
+import EvalScoreCard from '../components/ui/EvalScoreCard'
 
 const EXAMPLE_QUESTIONS = [
   'What should I check if the hydraulic pump overheats?',
@@ -36,7 +46,6 @@ function SourceCard({ source, rank }: { source: SourceChunk; rank: number }) {
 
   return (
     <Card className="overflow-hidden">
-      {/* Header */}
       <div className="p-3 border-b border-slate-100 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-5 h-5 rounded bg-slate-100 text-slate-500 text-xs font-bold flex items-center justify-center shrink-0">
@@ -45,25 +54,15 @@ function SourceCard({ source, rank }: { source: SourceChunk; rank: number }) {
           <Badge variant="filetype" fileType={source.file_type}>
             {source.file_type.toUpperCase()}
           </Badge>
-          <span className="text-xs font-medium text-slate-700 truncate">
-            {source.doc_name}
-          </span>
+          <span className="text-xs font-medium text-slate-700 truncate">{source.doc_name}</span>
         </div>
         <ScoreBar score={source.score} compact />
       </div>
-
-      {/* Score bar */}
       <div className="px-3 py-2 bg-slate-50 border-b border-slate-100">
         <ScoreBar score={source.score} showLabel />
       </div>
-
-      {/* Text excerpt */}
       <div className="p-3">
-        <p
-          className={`text-xs text-slate-600 leading-relaxed font-mono whitespace-pre-wrap ${
-            expanded ? '' : 'line-clamp-3'
-          }`}
-        >
+        <p className={`text-xs text-slate-600 leading-relaxed font-mono whitespace-pre-wrap ${expanded ? '' : 'line-clamp-3'}`}>
           {source.text_excerpt}
         </p>
         {source.text_excerpt.length >= 290 && (
@@ -83,44 +82,47 @@ function SourceCard({ source, rank }: { source: SourceChunk; rank: number }) {
 
 function AnswerPanel({ result }: { result: AskResponse }) {
   const [sourcesOpen, setSourcesOpen] = useState(true)
+  const navigate = useNavigate()
 
   return (
     <div className="animate-slide-up space-y-4">
 
       {/* Answer card */}
       <Card accent={result.llm_used ? 'blue' : 'amber'} className="overflow-hidden">
-        {/* Card header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/60">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/60 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {result.llm_used ? (
               <>
                 <Brain size={15} className="text-blue-500" />
-                <span className="text-sm font-semibold text-slate-800">
-                  LLM-synthesised answer
-                </span>
+                <span className="text-sm font-semibold text-slate-800">LLM-synthesised answer</span>
               </>
             ) : (
               <>
                 <Zap size={15} className="text-amber-500" />
-                <span className="text-sm font-semibold text-slate-800">
-                  Retrieval-grounded answer
-                </span>
+                <span className="text-sm font-semibold text-slate-800">Retrieval-grounded answer</span>
               </>
             )}
-          </div>
-          <div className="flex items-center gap-2">
-            {result.llm_used ? (
-              <Badge variant="info">LLM</Badge>
-            ) : (
-              <Badge variant="warning">Fallback</Badge>
+            {result.template_name && (
+              <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                {result.template_name}
+              </span>
             )}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {result.llm_used ? <Badge variant="info">LLM</Badge> : <Badge variant="warning">Fallback</Badge>}
             <span className="text-xs text-slate-400">
               {result.retrieval_count} source{result.retrieval_count !== 1 ? 's' : ''} retrieved
             </span>
+            {result.experiment_run_id && (
+              <button
+                onClick={() => navigate('/experiments')}
+                className="flex items-center gap-1 text-xs text-slate-400 hover:text-blue-600"
+              >
+                <History size={11} /> Saved
+              </button>
+            )}
           </div>
         </div>
-
-        {/* Answer body */}
         <div className="p-5">
           <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
             {result.answer}
@@ -128,30 +130,29 @@ function AnswerPanel({ result }: { result: AskResponse }) {
         </div>
       </Card>
 
+      {/* Inline evaluation scores */}
+      {result.evaluation && (
+        <EvalScoreCard scores={result.evaluation} label="Answer Quality" />
+      )}
+
       {/* Sources section */}
       {result.sources.length > 0 && (
         <div>
-          {/* Sources toggle header */}
           <button
             onClick={() => setSourcesOpen(!sourcesOpen)}
             className="w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors group"
           >
             <div className="flex items-center gap-2">
               <BookOpen size={15} className="text-slate-500" />
-              <span className="text-sm font-semibold text-slate-700">
-                Supporting Sources
-              </span>
+              <span className="text-sm font-semibold text-slate-700">Supporting Sources</span>
               <span className="bg-slate-100 text-slate-600 text-xs font-bold px-1.5 py-0.5 rounded-full">
                 {result.sources.length}
               </span>
             </div>
-            {sourcesOpen ? (
-              <ChevronUp size={15} className="text-slate-400 group-hover:text-slate-600" />
-            ) : (
-              <ChevronDown size={15} className="text-slate-400 group-hover:text-slate-600" />
-            )}
+            {sourcesOpen
+              ? <ChevronUp size={15} className="text-slate-400 group-hover:text-slate-600" />
+              : <ChevronDown size={15} className="text-slate-400 group-hover:text-slate-600" />}
           </button>
-
           {sourcesOpen && (
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 animate-fade-in">
               {result.sources.map((source, i) => (
@@ -165,17 +166,28 @@ function AnswerPanel({ result }: { result: AskResponse }) {
   )
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AskPage() {
   const navigate = useNavigate()
-
   const [question, setQuestion] = useState('')
   const [topK, setTopK] = useState(5)
+  const [templateId, setTemplateId] = useState<string | undefined>(undefined)
   const [result, setResult] = useState<AskResponse | null>(null)
 
-  const askMutation = useMutation<AskResponse, Error, { question: string; topK: number }>({
-    mutationFn: ({ question, topK }) => api.ask(question, topK),
+  // Load available prompt templates
+  const { data: promptsData } = useQuery({
+    queryKey: ['prompts'],
+    queryFn: api.getPrompts,
+  })
+
+  const askMutation = useMutation<
+    AskResponse,
+    Error,
+    { question: string; topK: number; templateId?: string }
+  >({
+    mutationFn: ({ question, topK, templateId }) =>
+      api.ask(question, topK, templateId),
     onSuccess: (data) => setResult(data),
   })
 
@@ -183,7 +195,7 @@ export default function AskPage() {
     const q = question.trim()
     if (!q) return
     setResult(null)
-    askMutation.mutate({ question: q, topK })
+    askMutation.mutate({ question: q, topK, templateId })
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -197,10 +209,9 @@ export default function AskPage() {
     setQuestion(q)
     setResult(null)
     askMutation.reset()
-    askMutation.mutate({ question: q, topK })
+    askMutation.mutate({ question: q, topK, templateId })
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-4xl mx-auto px-8 py-8">
 
@@ -209,11 +220,11 @@ export default function AskPage() {
         <h1 className="text-2xl font-bold text-slate-900">Ask a Question</h1>
         <p className="text-slate-500 mt-1 text-sm">
           Get grounded answers from your indexed engineering documents.
-          Every answer cites the exact source chunks it was drawn from.
+          Every answer is evaluated and saved to Experiment History automatically.
         </p>
       </div>
 
-      {/* ── Question input card ─────────────────────────────────────── */}
+      {/* ── Question input card ───────────────────────────────────────── */}
       <Card className="p-5 mb-6">
 
         {/* Textarea */}
@@ -231,6 +242,41 @@ export default function AskPage() {
           </p>
         </div>
 
+        {/* Template selector (v2) */}
+        {promptsData && promptsData.templates.length > 0 && (
+          <div className="mt-3">
+            <label className="text-xs font-medium text-slate-600 block mb-1">
+              Prompt template:
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setTemplateId(undefined)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                  templateId == null
+                    ? 'bg-slate-700 text-white border-slate-700'
+                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'
+                }`}
+              >
+                Default
+              </button>
+              {promptsData.templates.map((tmpl: PromptTemplate) => (
+                <button
+                  key={tmpl.id}
+                  onClick={() => setTemplateId(tmpl.id)}
+                  title={tmpl.description ?? ''}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                    templateId === tmpl.id
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400'
+                  }`}
+                >
+                  {tmpl.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Controls row */}
         <div className="flex items-center justify-between mt-3 flex-wrap gap-3">
           <div className="flex items-center gap-2">
@@ -241,9 +287,7 @@ export default function AskPage() {
                   key={n}
                   onClick={() => setTopK(n)}
                   className={`w-8 h-7 rounded-md text-xs font-semibold transition-colors ${
-                    topK === n
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    topK === n ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   {n}
@@ -286,7 +330,7 @@ export default function AskPage() {
         )}
       </Card>
 
-      {/* ── Loading state ───────────────────────────────────────────── */}
+      {/* ── Loading ───────────────────────────────────────────────────── */}
       {askMutation.isPending && (
         <Card className="p-8 flex flex-col items-center gap-4 animate-fade-in">
           <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
@@ -295,13 +339,13 @@ export default function AskPage() {
           <div className="text-center">
             <p className="text-sm font-semibold text-slate-800">Searching your documents…</p>
             <p className="text-xs text-slate-400 mt-1">
-              Embedding query · Retrieving {topK} chunks · Generating answer
+              Embedding query · Retrieving {topK} chunks · Generating answer · Evaluating
             </p>
           </div>
         </Card>
       )}
 
-      {/* ── Error state ─────────────────────────────────────────────── */}
+      {/* ── Error ─────────────────────────────────────────────────────── */}
       {askMutation.isError && (
         <Card accent="red" className="p-5 animate-fade-in">
           <p className="text-sm font-medium text-red-700">Could not generate an answer</p>
@@ -320,7 +364,7 @@ export default function AskPage() {
         </Card>
       )}
 
-      {/* ── Answer panel ────────────────────────────────────────────── */}
+      {/* ── Answer panel ──────────────────────────────────────────────── */}
       {result && !askMutation.isPending && (
         <AnswerPanel result={result} />
       )}
