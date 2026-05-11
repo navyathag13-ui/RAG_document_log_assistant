@@ -142,5 +142,25 @@ def document_exists(doc_id: str) -> bool:
     return len(results["ids"]) > 0
 
 
+def get_all_chunks() -> list[dict[str, Any]]:
+    """
+    Return every chunk as {id, text, metadata}.
+
+    Used by the hybrid retrieval BM25 index builder.
+    Returns an empty list if the collection is empty.
+    """
+    count = _collection.count()
+    if count == 0:
+        return []
+
+    results = _collection.get(include=["documents", "metadatas"])
+    return [
+        {"id": cid, "text": text, "metadata": meta}
+        for cid, text, meta in zip(
+            results["ids"], results["documents"], results["metadatas"]
+        )
+    ]
+
+
 def total_chunks() -> int:
     return _collection.count()

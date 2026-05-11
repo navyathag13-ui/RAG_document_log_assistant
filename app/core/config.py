@@ -6,13 +6,14 @@ class Settings(BaseSettings):
 
     # ── Application ──────────────────────────────────────────────────────────────
     APP_NAME: str = "Engineering RAG Assistant"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "2.0.0"
     DEBUG: bool = False
 
     # ── Storage paths ────────────────────────────────────────────────────────────
     DATA_DIR: str = "data"
     CHROMA_DB_PATH: str = "data/chroma_db"
     CHROMA_COLLECTION_NAME: str = "engineering_docs"
+    EXPERIMENTS_DB_PATH: str = "data/experiments.db"  # SQLite for experiment tracking
 
     # ── Embedding ────────────────────────────────────────────────────────────────
     # Sentence-transformers model; downloaded automatically on first run (~90 MB).
@@ -24,6 +25,7 @@ class Settings(BaseSettings):
 
     # ── Retrieval ────────────────────────────────────────────────────────────────
     DEFAULT_TOP_K: int = 5
+    HYBRID_ALPHA: float = 0.7    # weight for semantic vs BM25 (1.0 = pure semantic)
 
     # ── LLM (optional) ───────────────────────────────────────────────────────────
     # Leave OPENAI_API_KEY blank to run in retrieval-only (no-LLM) mode.
