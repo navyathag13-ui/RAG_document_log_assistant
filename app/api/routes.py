@@ -140,10 +140,18 @@ def list_documents():
 @router.post("/search", response_model=SearchResponse, tags=["Retrieval"])
 def search(body: SearchQuery):
     """
-    Semantic search: return the top-k most relevant chunks for a query string.
+    Retrieve the top-k most relevant chunks for a query.
+
+    Set use_hybrid=true to blend BM25 keyword matching with semantic similarity.
+    hybrid_alpha controls the blend (1.0 = pure semantic, 0.0 = pure BM25).
     """
     try:
-        results = retrieval_service.retrieve(body.query, top_k=body.top_k)
+        results = retrieval_service.retrieve(
+            body.query,
+            top_k=body.top_k,
+            use_hybrid=body.use_hybrid,
+            hybrid_alpha=body.hybrid_alpha,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
@@ -151,6 +159,7 @@ def search(body: SearchQuery):
         query=body.query,
         results=results,
         total_results=len(results),
+        retrieval_mode="hybrid" if body.use_hybrid else "semantic",
     )
 
 
@@ -166,7 +175,12 @@ def ask(body: AskQuery):
     - Returns a formatted, source-linked answer from the retrieved chunks (fallback).
     """
     try:
-        response = qa_service.answer(body.question, top_k=body.top_k)
+        response = qa_service.answer(
+            body.question,
+            top_k=body.top_k,
+            template_id=body.template_id,
+            auto_evaluate=body.auto_evaluate,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     except Exception as exc:
