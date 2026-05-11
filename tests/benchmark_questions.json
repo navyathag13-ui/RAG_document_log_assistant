@@ -1,0 +1,126 @@
+{
+  "description": "Engineering RAG Assistant — benchmark question set for evaluating retrieval and QA quality.",
+  "version": "1.0",
+  "questions": [
+    {
+      "id": "bq_001",
+      "question": "What should I check first if the hydraulic pump overheats?",
+      "expected_keywords": ["cooling", "fan", "fluid", "viscosity", "temperature"],
+      "primary_doc": "troubleshooting_guide",
+      "difficulty": "easy",
+      "category": "troubleshooting"
+    },
+    {
+      "id": "bq_002",
+      "question": "What are the restart steps after a sensor communication fault (FAULT-S04)?",
+      "expected_keywords": ["sensor", "communication", "fault", "restart", "calibration"],
+      "primary_doc": "troubleshooting_guide",
+      "difficulty": "medium",
+      "category": "troubleshooting"
+    },
+    {
+      "id": "bq_003",
+      "question": "What is the maximum operating pressure for the HX-9000 system?",
+      "expected_keywords": ["280", "bar", "pressure", "operating", "limit"],
+      "primary_doc": "manual",
+      "difficulty": "easy",
+      "category": "specifications"
+    },
+    {
+      "id": "bq_004",
+      "question": "What voltage range is required for the EDC electronics?",
+      "expected_keywords": ["voltage", "vdc", "22.5", "26.5", "calibration", "EDC"],
+      "primary_doc": "manual",
+      "difficulty": "medium",
+      "category": "specifications"
+    },
+    {
+      "id": "bq_005",
+      "question": "What caused the FAULT-T02 overtemperature incident described in the engineering note?",
+      "expected_keywords": ["fuse", "thermal", "cooling", "fan", "blown"],
+      "primary_doc": "sample_engineering_note",
+      "difficulty": "medium",
+      "category": "incident_analysis"
+    },
+    {
+      "id": "bq_006",
+      "question": "What was the root cause of the sensor communication fault in the engineering report?",
+      "expected_keywords": ["loose", "wire", "TB-3", "termination", "PT-01"],
+      "primary_doc": "sample_engineering_note",
+      "difficulty": "medium",
+      "category": "incident_analysis"
+    },
+    {
+      "id": "bq_007",
+      "question": "What are the steps for a planned shutdown of the hydraulic system?",
+      "expected_keywords": ["shutdown", "pressure", "reduce", "valve", "off"],
+      "primary_doc": "manual",
+      "difficulty": "easy",
+      "category": "procedures"
+    },
+    {
+      "id": "bq_008",
+      "question": "What troubleshooting steps are recommended for a pressure drop alert?",
+      "expected_keywords": ["leak", "pressure", "check", "relief", "valve", "bypass"],
+      "primary_doc": "troubleshooting_guide",
+      "difficulty": "medium",
+      "category": "troubleshooting"
+    },
+    {
+      "id": "bq_009",
+      "question": "What does the system log indicate about events on 2024-03-04?",
+      "expected_keywords": ["fault", "warning", "maintenance", "recovery", "2024-03-04"],
+      "primary_doc": "sample_log",
+      "difficulty": "hard",
+      "category": "log_analysis"
+    },
+    {
+      "id": "bq_010",
+      "question": "What is the normal operating temperature range for the hydraulic system?",
+      "expected_keywords": ["40", "55", "temperature", "operating", "celsius"],
+      "primary_doc": "manual",
+      "difficulty": "easy",
+      "category": "specifications"
+    },
+    {
+      "id": "bq_011",
+      "question": "How should I identify which sensor is affected when FAULT-S04 appears?",
+      "expected_keywords": ["PT-01", "PT-02", "TT-01", "FT-01", "identify", "sensor"],
+      "primary_doc": "troubleshooting_guide",
+      "difficulty": "medium",
+      "category": "troubleshooting"
+    },
+    {
+      "id": "bq_012",
+      "question": "What corrective action was taken for the loose wire termination at TB-3?",
+      "expected_keywords": ["re-terminated", "wire", "TB-3", "pin", "torqued"],
+      "primary_doc": "sample_engineering_note",
+      "difficulty": "hard",
+      "category": "incident_analysis"
+    },
+    {
+      "id": "bq_013",
+      "question": "What are the pre-start checks before powering on the HX-9000?",
+      "expected_keywords": ["fluid", "level", "connections", "check", "pre-start"],
+      "primary_doc": "manual",
+      "difficulty": "easy",
+      "category": "procedures"
+    },
+    {
+      "id": "bq_014",
+      "question": "What is the recommended fuse replacement after the thermal fuse failure?",
+      "expected_keywords": ["slow-blow", "12", "amp", "fuse", "replacement"],
+      "primary_doc": "sample_engineering_note",
+      "difficulty": "hard",
+      "category": "incident_analysis"
+    },
+    {
+      "id": "bq_015",
+      "question": "What is the maximum flow rate the system can sustain?",
+      "expected_keywords": ["120", "l/min", "flow", "rate", "maximum"],
+      "primary_doc": "manual",
+      "difficulty": "easy",
+      "category": "specifications"
+    }
+  ]
+}

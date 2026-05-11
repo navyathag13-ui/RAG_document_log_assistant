@@ -1,5 +1,8 @@
 # Tool metadata
 .claude/
+scratch/
+prompts/
+*.tmp
 
 # Environment
 .env
@@ -23,8 +26,16 @@ env/
 # Vector database (persisted locally, large)
 data/chroma_db/
 
+# Runtime SQLite database (generated on first run)
+data/experiments.db
+*.db
+
 # Uploaded / ingested files (not sample docs)
 data/uploads/
+
+# Node
+frontend/node_modules/
+frontend/dist/
 
 # IDE
 .vscode/
