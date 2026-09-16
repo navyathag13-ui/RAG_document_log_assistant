@@ -61,4 +61,7 @@ app.add_middleware(
 app.include_router(router)
 app.include_router(eval_router)
 
-logger.info("Routes registered: %s", [r.path for r in app.routes])
+logger.info(
+    "Routes registered: %s",
+    [r.path for r in app.routes if hasattr(r, "path")],
+)
