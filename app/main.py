@@ -1,5 +1,5 @@
 """
-Engineering RAG Assistant — FastAPI application entry point (v2).
+Engineering RAG Assistant — FastAPI application entry point (v3).
 """
 from contextlib import asynccontextmanager
 
@@ -11,11 +11,30 @@ from app.api.eval_routes import eval_router
 from app.api.agent_routes import agent_router
 from app.core.config import settings
 from app.core.logging_config import get_logger, setup_logging
+from app.services import llm_service
 
 
 # ── Logging setup (must run before anything else) ────────────────────────────────
 setup_logging()
 logger = get_logger(__name__)
+
+
+# ── Azure Monitor / Application Insights (optional) ──────────────────────────────
+# Gated entirely on APPLICATIONINSIGHTS_CONNECTION_STRING being set. When it
+# isn't, telemetry just stays as the local stdout logging that was already
+# there -- this doesn't change behavior at all in that case, only adds to it.
+# configure_azure_monitor() also auto-instruments the standard `logging`
+# module, so every existing logger.info/.warning call in this codebase
+# (nothing rewritten for this) starts shipping to App Insights as trace
+# entries once this is enabled, in addition to the request/dependency
+# tracing FastAPIInstrumentor adds below.
+if settings.APPLICATIONINSIGHTS_CONNECTION_STRING:
+    from azure.monitor.opentelemetry import configure_azure_monitor
+
+    configure_azure_monitor(connection_string=settings.APPLICATIONINSIGHTS_CONNECTION_STRING)
+    logger.info("Azure Monitor telemetry enabled.")
+else:
+    logger.info("APPLICATIONINSIGHTS_CONNECTION_STRING not set; telemetry stays local (stdout) only.")
 
 
 # ── Lifespan: warm up models and initialise DB at startup ────────────────────────
@@ -31,9 +50,11 @@ async def lifespan(app: FastAPI):
     from app.db.init_db import init_db
     init_db()
 
+    resolved_llm = llm_service.resolve()
     logger.info(
-        "Ready. LLM synthesis: %s",
-        "enabled" if settings.OPENAI_API_KEY else "disabled (fallback mode)",
+        "Ready. LLM synthesis: %s. Content Safety: %s.",
+        f"enabled ({resolved_llm.provider})" if resolved_llm.provider != "none" else "disabled (fallback mode)",
+        "enabled" if (settings.AZURE_CONTENT_SAFETY_ENDPOINT and settings.AZURE_CONTENT_SAFETY_KEY) else "disabled (unscreened)",
     )
     yield
     logger.info("Shutting down.")
@@ -53,6 +74,11 @@ app = FastAPI(
     ),
     lifespan=lifespan,
 )
+
+if settings.APPLICATIONINSIGHTS_CONNECTION_STRING:
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+    FastAPIInstrumentor.instrument_app(app)
 
 app.add_middleware(
     CORSMiddleware,
