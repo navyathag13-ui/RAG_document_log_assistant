@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router
 from app.api.eval_routes import eval_router
+from app.api.agent_routes import agent_router
 from app.core.config import settings
 from app.core.logging_config import get_logger, setup_logging
 
@@ -46,7 +47,9 @@ app = FastAPI(
         "A retrieval-augmented generation (RAG) backend for engineering manuals, "
         "troubleshooting guides, system logs, and internal documents. "
         "v2 adds prompt template management, side-by-side comparison, "
-        "answer evaluation, and experiment tracking."
+        "answer evaluation, and experiment tracking. v3 adds Azure OpenAI "
+        "integration, Semantic Kernel agent orchestration with real function "
+        "calling, and responsible AI safeguards (Content Safety + groundedness)."
     ),
     lifespan=lifespan,
 )
@@ -60,6 +63,7 @@ app.add_middleware(
 
 app.include_router(router)
 app.include_router(eval_router)
+app.include_router(agent_router)
 
 logger.info(
     "Routes registered: %s",
