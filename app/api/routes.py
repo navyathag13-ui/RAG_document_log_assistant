@@ -23,7 +23,7 @@ from app.models.schemas import (
     SearchQuery,
     SearchResponse,
 )
-from app.services import ingest_service, qa_service, retrieval_service, vector_store
+from app.services import ingest_service, llm_service, qa_service, retrieval_service, vector_store
 from app.utils.file_loader import SUPPORTED_EXTENSIONS
 
 router = APIRouter()
@@ -46,13 +46,18 @@ def health_check():
     # Build doc count from metadata
     meta_pairs = vector_store.get_all_document_metadata()
     unique_docs = {m.get("doc_id") for _, m in meta_pairs}
+    resolved_llm = llm_service.resolve()
 
     return HealthResponse(
         status="healthy",
         version=settings.APP_VERSION,
         indexed_documents=len(unique_docs),
         total_chunks=vector_store.total_chunks(),
-        llm_available=bool(settings.OPENAI_API_KEY),
+        llm_available=resolved_llm.provider != "none",
+        llm_provider=resolved_llm.provider,
+        content_safety_enabled=bool(
+            settings.AZURE_CONTENT_SAFETY_ENDPOINT and settings.AZURE_CONTENT_SAFETY_KEY
+        ),
     )
 
 

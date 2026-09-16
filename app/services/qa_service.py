@@ -20,6 +20,7 @@ from typing import Optional
 from app.core.config import settings
 from app.core.logging_config import get_logger
 from app.models.schemas import AskResponse, EvalScores, SourceChunk
+from app.services import llm_service
 from app.services.retrieval_service import retrieve
 
 logger = get_logger(__name__)
@@ -68,15 +69,17 @@ def answer_with_template(
     # Resolve system prompt
     system_prompt, template_name = _resolve_template(template_id)
 
-    if settings.OPENAI_API_KEY:
-        generated, llm_used = _llm_answer(question, chunks, system_prompt)
+    if llm_service.is_configured():
+        generated, llm_used, provider = _llm_answer(question, chunks, system_prompt)
     else:
         generated, llm_used = _fallback_answer(question, chunks)
+        provider = "none"
 
     ask_resp = AskResponse(
         question        = question,
         answer          = generated,
         llm_used        = llm_used,
+        llm_provider    = provider,
         retrieval_count = len(chunks),
         sources         = sources,
         template_name   = template_name,
@@ -156,23 +159,24 @@ def answer(
 
 # ── LLM answer ────────────────────────────────────────────────────────────────
 
-def _llm_answer(question: str, chunks, system_prompt: str) -> tuple[str, bool]:
-    try:
-        from openai import OpenAI
-    except ImportError:
-        logger.warning("openai package not installed; falling back to retrieval-only mode.")
-        return _fallback_answer(question, chunks)
+def _llm_answer(question: str, chunks, system_prompt: str) -> tuple[str, bool, str]:
+    """
+    Returns (answer_text, llm_used, provider). provider is "azure_openai" or
+    "openai" on success, or "none" if it fell back to retrieval-only —
+    either because no client is configured or because the call failed.
+    """
+    client, model, provider = llm_service.get_chat_client()
+    if client is None:
+        logger.warning("No LLM client configured; falling back to retrieval-only mode.")
+        text, used = _fallback_answer(question, chunks)
+        return text, used, "none"
 
     context      = _build_context(chunks)
     user_message = f"Context:\n{context}\n\nQuestion: {question}"
 
     try:
-        client = OpenAI(
-            api_key  = settings.OPENAI_API_KEY,
-            base_url = settings.OPENAI_BASE_URL,
-        )
         response = client.chat.completions.create(
-            model    = settings.OPENAI_MODEL,
+            model    = model,
             messages = [
                 {"role": "system", "content": system_prompt},
                 {"role": "user",   "content": user_message},
@@ -181,12 +185,13 @@ def _llm_answer(question: str, chunks, system_prompt: str) -> tuple[str, bool]:
             max_tokens  = 600,
         )
         answer_text = response.choices[0].message.content.strip()
-        logger.info("LLM answer generated (%d chars).", len(answer_text))
-        return answer_text, True
+        logger.info("LLM answer generated via %s (%d chars).", provider, len(answer_text))
+        return answer_text, True, provider
 
     except Exception as exc:
-        logger.warning("LLM call failed (%s); falling back to retrieval-only mode.", exc)
-        return _fallback_answer(question, chunks)
+        logger.warning("LLM call via %s failed (%s); falling back to retrieval-only mode.", provider, exc)
+        text, used = _fallback_answer(question, chunks)
+        return text, used, "none"
 
 
 # ── Fallback answer (no LLM) ─────────────────────────────────────────────────
