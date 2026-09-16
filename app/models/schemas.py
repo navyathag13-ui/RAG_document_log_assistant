@@ -21,6 +21,14 @@ class HealthResponse(BaseModel):
     indexed_documents: int
     total_chunks: int
     llm_available: bool
+    llm_provider: str = Field(
+        default="none",
+        description="'azure_openai', 'openai', or 'none' — which generation backend is active",
+    )
+    content_safety_enabled: bool = Field(
+        default=False,
+        description="True when Azure AI Content Safety is configured and screening /ask and /agent",
+    )
 
 
 # ── Ingest ────────────────────────────────────────────────────────────────────
@@ -117,6 +125,10 @@ class AskResponse(BaseModel):
     question: str
     answer: str
     llm_used: bool = Field(description="True when answer was synthesised by an LLM")
+    llm_provider: str = Field(
+        default="none",
+        description="Which backend generated the answer: 'azure_openai', 'openai', or 'none' (retrieval-only fallback)",
+    )
     retrieval_count: int
     sources: list[SourceChunk]
     # v2 optional enrichments
