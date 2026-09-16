@@ -121,6 +121,24 @@ class EvalScores(BaseModel):
     method: str = "rule_based"
 
 
+# ── Responsible AI safeguards (v3) — defined here so AskResponse can use them ──
+
+class ContentSafetyResult(BaseModel):
+    checked: bool = Field(description="False when Content Safety isn't configured, so nothing was screened")
+    flagged: bool = False
+    categories: dict[str, int] = Field(
+        default_factory=dict,
+        description="Per-category severity (0,2,4,6) returned by Azure AI Content Safety, when checked",
+    )
+    note: Optional[str] = None
+
+
+class GroundednessResult(BaseModel):
+    grounded: bool
+    overlap_ratio: float = Field(description="Fraction of the answer's meaningful words found in the cited source text")
+    method: str = "word_overlap"
+
+
 class AskResponse(BaseModel):
     question: str
     answer: str
@@ -135,6 +153,11 @@ class AskResponse(BaseModel):
     evaluation: Optional[EvalScores] = None
     experiment_run_id: Optional[str] = None
     template_name: Optional[str] = None
+    # v3 optional enrichments (responsible AI safeguards; populated on /ask only,
+    # not on /compare or /benchmark, to keep Content Safety API calls bounded)
+    input_safety: Optional[ContentSafetyResult] = None
+    output_safety: Optional[ContentSafetyResult] = None
+    groundedness_flag: Optional[GroundednessResult] = None
 
 
 # ── Delete ────────────────────────────────────────────────────────────────────
@@ -320,3 +343,28 @@ class BenchmarkRunResponse(BaseModel):
     total_questions: int
     avg_overall_score: float
     results: list[BenchmarkQuestionResult]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# v3 — Agent orchestration (Semantic Kernel) + Responsible AI safeguards
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AgentQuery(BaseModel):
+    query: str = Field(..., min_length=1, description="Natural-language request for the agent")
+
+
+class AgentToolCall(BaseModel):
+    tool: str = Field(description="plugin_name.function_name of the tool that was invoked")
+    arguments: dict[str, Any]
+    result_excerpt: str = Field(description="First 300 characters of what the tool returned")
+
+
+class AgentResponse(BaseModel):
+    query: str
+    answer: str
+    llm_used: bool
+    llm_provider: str = "none"
+    tool_calls: list[AgentToolCall] = Field(default_factory=list)
+    input_safety: Optional[ContentSafetyResult] = None
+    output_safety: Optional[ContentSafetyResult] = None
+    groundedness: Optional[GroundednessResult] = None

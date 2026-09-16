@@ -154,6 +154,21 @@ def answer(
         # Never let tracking errors break the primary /ask response
         logger.warning("Experiment tracking failed (non-fatal): %s", exc)
 
+    # ── Responsible AI safeguards (Phase 3) ───────────────────────────────────
+    # Never let a safety-service failure break the primary /ask response —
+    # safety_service itself already degrades to checked=False on errors, but
+    # wrap here too in case a future change to it doesn't.
+    try:
+        from app.services import safety_service
+
+        ask_resp.input_safety = safety_service.check_text(question)
+        ask_resp.output_safety = safety_service.check_text(ask_resp.answer)
+
+        source_text = " ".join(c["text"] for c in raw_chunks)
+        ask_resp.groundedness_flag = safety_service.check_groundedness(ask_resp.answer, source_text)
+    except Exception as exc:
+        logger.warning("Safety screening failed (non-fatal): %s", exc)
+
     return ask_resp
 
 
