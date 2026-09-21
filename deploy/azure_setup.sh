@@ -44,9 +44,9 @@ LOCATION="eastus"                      # Azure OpenAI + Content Safety region av
 UNIQUE_SUFFIX="$(date +%s | tail -c 6)" # keeps resource names globally unique without you having to think about it
 
 AOAI_NAME="aoai-rag-${UNIQUE_SUFFIX}"
-AOAI_DEPLOYMENT_NAME="gpt-4o-mini"
-AOAI_MODEL="gpt-4o-mini"
-AOAI_MODEL_VERSION="2024-07-18"        # check `az cognitiveservices account list-models` for what's current in your region
+AOAI_DEPLOYMENT_NAME="gpt-41-mini"
+AOAI_MODEL="gpt-4.1-mini"
+AOAI_MODEL_VERSION="2025-04-14"        # gpt-4o-mini had 0 quota on an Azure for Students sub; gpt-4.1-mini (GlobalStandard) worked. check `az cognitiveservices account list-models` for what's current in your region
 
 CONTENT_SAFETY_NAME="safety-rag-${UNIQUE_SUFFIX}"
 
@@ -108,7 +108,7 @@ az cognitiveservices account deployment create \
     --model-version "$AOAI_MODEL_VERSION" \
     --model-format OpenAI \
     --sku-capacity 10 \
-    --sku-name "Standard"
+    --sku-name "GlobalStandard"
 
 AOAI_ENDPOINT=$(az cognitiveservices account show \
     --name "$AOAI_NAME" --resource-group "$RESOURCE_GROUP" \

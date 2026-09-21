@@ -171,7 +171,7 @@ Azure OpenAI specifically also requires a one-time access request (usually fast)
 
 | Resource | Tier used | Typical cost for this project |
 |---|---|---|
-| Azure OpenAI (`gpt-4o-mini` deployment) | S0, pay-per-token | Fractions of a cent per request; a few dozen test calls is well under $1 |
+| Azure OpenAI (`gpt-4.1-mini` deployment) | S0, pay-per-token | Fractions of a cent per request; a few dozen test calls is well under $1 |
 | Azure AI Content Safety | F0 (free) | $0 — 5,000 text records/month included, far more than a demo needs |
 | Log Analytics + Application Insights | Pay-per-GB after 5 GB free | $0 in practice for occasional demo traffic |
 | Azure Container Apps | Consumption plan | $0 in practice — 180,000 vCPU-seconds/month free, and `--min-replicas 0` scales to zero when idle |
@@ -306,29 +306,20 @@ Every tool invocation is captured by a Semantic Kernel `FUNCTION_INVOCATION` fil
 
 ### What's verified and what isn't
 
-This matters enough to say plainly rather than bury in a limitations section. The environment that built this had:
-- no Azure subscription or credentials of any kind
-- no OpenAI API key
-- no `az` CLI installed
-- no Docker daemon running
+Verified live on 2026-09-21 against a real Azure OpenAI deployment (`gpt-4.1-mini`, GlobalStandard, North Central US, an Azure for Students subscription) and a real Azure AI Content Safety resource (F0 tier):
 
-So here's the honest split:
+- **Real function calling, with different decisions per query.** Four agent queries, four different behaviours: a how-to question called only `documents.search_documents`; a status question called only `equipment.check_equipment_status`; a vague question ("It keeps failing, what do I do?") called **no tool** and asked a clarifying question; a compound question called **both**, in sequence. Each tool call, its arguments and its result were captured in the `tool_calls` trace. This is four hand-picked queries, not an evaluation: no accuracy or tool-selection-rate is claimed.
+- **`/ask` through Azure OpenAI** returned a synthesised, cited answer (`llm_provider: azure_openai`).
+- **Content Safety is a real call.** A violent input was rejected with HTTP 400 by the live service; a benign query and its answer returned severity 0 in all four categories.
+- The offline fallback, provider resolution, graceful failure on a bad key, Azure Monitor wiring and every v2 feature were also verified earlier (see above).
 
-**Actually run and verified locally:**
-- The full offline pipeline (ingest, search, ask-fallback) end-to-end, including after every phase's changes
-- `llm_service`'s provider resolution logic, including the fallback-on-failure path (tested with a deliberately invalid OpenAI key — confirmed the app makes a real network call to OpenAI's API, gets a genuine 401, and degrades gracefully to the offline fallback rather than crashing)
-- The Semantic Kernel kernel construction, plugin registration, and filter registration (also exercised via the invalid-key test — the agent got as far as actually calling OpenAI's chat completions endpoint before failing on auth, proving the whole request is built correctly)
-- Azure Monitor wiring: confirmed the app starts cleanly with no connection string (telemetry stays local), and with a fake-but-well-formed connection string it genuinely attempts to export telemetry and retries/warns on a DNS failure rather than crashing
-- Every existing v2 feature (prompt templates, `/compare`, `/evaluate`, `/experiments`, `/benchmark`) still works after all four phases' changes
+Defects found by that live run, and what was done:
 
-**Written but not executed, because doing so needs real cloud access this session didn't have:**
-- An actual successful Azure OpenAI or OpenAI call — the invalid-key test proves the plumbing is right, not that a real answer comes back correctly formatted
-- An actual multi-turn agent run where the model calls a tool and then synthesizes an answer from the result — this needs a real API key to prove
-- Azure AI Content Safety actually flagging or clearing real text — the code path is written and the "not configured" fallback is verified, but no real Content Safety call has been made
-- `docker build` — the Dockerfile has been written and reviewed carefully, but never built
-- Any `az` command in `deploy/azure_setup.sh` — written from documented CLI syntax, never run against a real subscription
+- The groundedness check first compared answers to the 300-character *display* excerpt of each tool result, so correct answers scored 0.10-0.14 overlap and were flagged. Fixed to compare against the full tool output (correct answers then scored 0.50 and 0.77).
+- **Known false positive remains:** a short, correct paraphrase of a JSON tool result (the equipment-status answer) still scores 0.20 and is flagged `grounded: false`. The check is a word-overlap heuristic; it was not re-tuned to hide this.
+- **Retrieval miss:** asked "what does WARN-T01 mean", the agent's search query returned no passage explaining the code even though the sample documents mention it, and the agent said so instead of inventing an answer. That is a semantic-search limitation on code-like tokens; hybrid BM25 retrieval (already implemented, `use_hybrid`) is not used by the agent tool. Not fixed.
 
-If you run this with real credentials, the honest next step is to actually exercise these paths and update this section with what you found — not to assume the untested parts work just because the tested parts did.
+Still **not** verified: `docker build` (no Docker here), any `az` command in `deploy/azure_setup.sh` (the university tenant's Conditional Access blocks the Azure CLI from this machine; resources were created by hand in Cloud Shell), and Container Apps deployment.
 
 ---
 
