@@ -192,7 +192,7 @@ Once you have real values, fill them into `.env` (copy from `.env.example`):
 ```bash
 AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
 AZURE_OPENAI_API_KEY=<key>
-AZURE_OPENAI_DEPLOYMENT=gpt-4o-mini
+AZURE_OPENAI_DEPLOYMENT=gpt-41-mini
 AZURE_OPENAI_API_VERSION=2024-10-21
 
 AZURE_CONTENT_SAFETY_ENDPOINT=https://<your-resource>.cognitiveservices.azure.com/
