@@ -83,10 +83,10 @@ confirm_cost "Create resource group '${RESOURCE_GROUP}'" \
 
 az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
 
-# ─── 2. Azure OpenAI resource + gpt-4o-mini deployment ───────────────────
+# ─── 2. Azure OpenAI resource + gpt-4.1-mini deployment ───────────────────
 
 confirm_cost "Create Azure OpenAI resource '${AOAI_NAME}' + deploy ${AOAI_MODEL}" \
-    "\$0 to create the resource itself; usage is pay-per-token. gpt-4o-mini is
+    "\$0 to create the resource itself; usage is pay-per-token. gpt-4.1-mini is
     Azure OpenAI's cheapest current chat model (as of when this was written)
     at a fraction of a cent per typical request. A few dozen test calls
     while building this project should be well under \$1 total, covered by
