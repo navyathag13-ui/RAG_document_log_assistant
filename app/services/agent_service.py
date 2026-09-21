@@ -193,6 +193,7 @@ class ToolCallRecord:
     tool: str
     arguments: dict[str, Any]
     result_excerpt: str
+    result_full: str = ""   # untruncated tool output; used for the groundedness check, not returned by the API
 
 
 @dataclass
@@ -267,6 +268,7 @@ async def run_agent(query: str) -> AgentResult:
             tool=f"{context.function.plugin_name}.{context.function.name}",
             arguments=args,
             result_excerpt=result_text[:300],
+            result_full=result_text,
         )
         trace.append(record)
         logger.info(

@@ -50,7 +50,7 @@ async def run_agent(body: AgentQuery):
 
     groundedness = None
     if result.llm_used and result.tool_calls:
-        source_text = " ".join(tc.result_excerpt for tc in result.tool_calls)
+        source_text = " ".join(tc.result_full or tc.result_excerpt for tc in result.tool_calls)
         groundedness = safety_service.check_groundedness(result.answer, source_text)
 
     return AgentResponse(
