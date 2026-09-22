@@ -110,6 +110,55 @@ def check_text(text: str) -> ContentSafetyResult:
         return ContentSafetyResult(checked=False, flagged=False, note=f"Content Safety call failed: {exc}")
 
 
+async def check_text_async(text: str) -> ContentSafetyResult:
+    """Async counterpart of check_text(), using azure.ai.contentsafety.aio's client so the network round-trip
+    is awaited instead of blocking a threadpool worker. Same behaviour and same ContentSafetyResult shape."""
+    if not (settings.AZURE_CONTENT_SAFETY_ENDPOINT and settings.AZURE_CONTENT_SAFETY_KEY):
+        return ContentSafetyResult(
+            checked=False,
+            flagged=False,
+            note="Content Safety not configured (AZURE_CONTENT_SAFETY_ENDPOINT / _KEY unset); text was not screened.",
+        )
+
+    if not text or not text.strip():
+        return ContentSafetyResult(checked=True, flagged=False, categories={})
+
+    try:
+        from azure.ai.contentsafety.aio import ContentSafetyClient
+        from azure.ai.contentsafety.models import AnalyzeTextOptions
+        from azure.core.credentials import AzureKeyCredential
+
+        client = ContentSafetyClient(
+            settings.AZURE_CONTENT_SAFETY_ENDPOINT,
+            AzureKeyCredential(settings.AZURE_CONTENT_SAFETY_KEY),
+        )
+        async with client:
+            response = await client.analyze_text(AnalyzeTextOptions(text=text[:10000]))
+
+        categories = {item.category: item.severity for item in response.categories_analysis}
+        threshold = settings.CONTENT_SAFETY_SEVERITY_THRESHOLD
+        flagged = any(sev >= threshold for sev in categories.values())
+
+        if flagged:
+            logger.warning("Content Safety flagged text (categories=%s, threshold=%d).", categories, threshold)
+
+        return ContentSafetyResult(
+            checked=True,
+            flagged=flagged,
+            categories=categories,
+            note=f"One or more categories >= severity {threshold}." if flagged else None,
+        )
+    except ImportError:
+        logger.warning("azure-ai-contentsafety not installed; skipping content safety check.")
+        return ContentSafetyResult(
+            checked=False, flagged=False,
+            note="azure-ai-contentsafety package not installed. Run: pip install azure-ai-contentsafety",
+        )
+    except Exception as exc:
+        logger.warning("Async Content Safety call failed (%s); treating as unchecked, not as unsafe.", exc)
+        return ContentSafetyResult(checked=False, flagged=False, note=f"Content Safety call failed: {exc}")
+
+
 def check_groundedness(answer: str, source_text: str) -> GroundednessResult:
     """
     Word-overlap groundedness check between a generated answer and the

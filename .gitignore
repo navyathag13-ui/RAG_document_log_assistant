@@ -55,3 +55,7 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# benchmark run artifacts (methodology + final numbers are in bench/README.md)
+bench/clean_*.json
+bench/fallback_*.json

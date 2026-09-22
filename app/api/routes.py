@@ -171,16 +171,21 @@ def search(body: SearchQuery):
 # ── Ask / QA ─────────────────────────────────────────────────────────────────────
 
 @router.post("/ask", response_model=AskResponse, tags=["QA"])
-def ask(body: AskQuery):
+async def ask(body: AskQuery):
     """
     Grounded question answering over indexed documents.
 
     Retrieves the most relevant chunks and either:
-    - Generates a synthesised answer via LLM (if OPENAI_API_KEY is configured), or
+    - Generates a synthesised answer via LLM (Azure OpenAI or OpenAI, if configured), or
     - Returns a formatted, source-linked answer from the retrieved chunks (fallback).
+
+    Async: the LLM and Content Safety calls are awaited rather than made from a blocking
+    sync client, so concurrent requests don't queue behind FastAPI's threadpool size while
+    each one waits on a network round-trip (see llm_service.get_async_chat_client()'s
+    docstring and bench/README.md for the measured before/after).
     """
     try:
-        response = qa_service.answer(
+        response = await qa_service.answer_async(
             body.question,
             top_k=body.top_k,
             template_id=body.template_id,
@@ -193,6 +198,7 @@ def ask(body: AskQuery):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
 
     return response
+
 
 
 # ── Delete ────────────────────────────────────────────────────────────────────────

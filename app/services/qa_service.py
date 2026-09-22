@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+from starlette.concurrency import run_in_threadpool
+
 from app.core.config import settings
 from app.core.logging_config import get_logger
 from app.models.schemas import AskResponse, EvalScores, SourceChunk
@@ -270,3 +272,127 @@ def _build_context(chunks) -> str:
             break
         parts.append(entry)
     return "\n\n---\n\n".join(parts)
+
+
+# ── Async entry point (used by the async /ask route) ─────────────────────────
+#
+# Mirrors answer_with_template() + answer() above exactly (same fallback rules,
+# same experiment tracking, same safety screening), but awaits the LLM and
+# Content Safety calls instead of blocking a threadpool worker on them, and
+# offloads the CPU-bound retrieval step to a thread explicitly so it doesn't
+# block the event loop either. See llm_service.get_async_chat_client()'s
+# docstring for the measured reason this exists.
+
+async def _llm_answer_async(question: str, chunks, system_prompt: str) -> tuple[str, bool, str]:
+    client, model, provider = llm_service.get_async_chat_client()
+    if client is None:
+        text, used = _fallback_answer(question, chunks)
+        return text, used, "none"
+
+    context      = _build_context(chunks)
+    user_message = f"Context:\n{context}\n\nQuestion: {question}"
+
+    try:
+        response = await client.chat.completions.create(
+            model    = model,
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": user_message},
+            ],
+            temperature = 0.1,
+            max_tokens  = 600,
+        )
+        answer_text = response.choices[0].message.content.strip()
+        logger.info("LLM answer generated via %s (async, %d chars).", provider, len(answer_text))
+        return answer_text, True, provider
+    except Exception as exc:
+        logger.warning("Async LLM call via %s failed (%s); falling back to retrieval-only mode.", provider, exc)
+        text, used = _fallback_answer(question, chunks)
+        return text, used, "none"
+
+
+async def answer_async(
+    question: str,
+    top_k: Optional[int] = None,
+    template_id: Optional[str] = None,
+    auto_evaluate: bool = True,
+) -> AskResponse:
+    """Async counterpart of answer(). Same behaviour and same response shape."""
+    chunks = await run_in_threadpool(retrieve, question, top_k)
+
+    sources = [
+        SourceChunk(
+            chunk_id     = c.chunk_id,
+            doc_name     = c.doc_name,
+            file_type    = c.file_type,
+            text_excerpt = c.text[:300],
+            score        = c.score,
+        )
+        for c in chunks
+    ]
+
+    system_prompt, template_name = _resolve_template(template_id)
+
+    if llm_service.is_configured():
+        generated, llm_used, provider = await _llm_answer_async(question, chunks, system_prompt)
+    else:
+        generated, llm_used = _fallback_answer(question, chunks)
+        provider = "none"
+
+    ask_resp = AskResponse(
+        question        = question,
+        answer          = generated,
+        llm_used        = llm_used,
+        llm_provider    = provider,
+        retrieval_count = len(chunks),
+        sources         = sources,
+        template_name   = template_name,
+    )
+
+    raw_chunks = [
+        {"text": c.text, "score": c.score, "doc_name": c.doc_name}
+        for c in chunks
+    ]
+
+    try:
+        from app.services import evaluation_service, experiment_service
+        from app.services.prompt_service import get_template
+
+        tmpl = await run_in_threadpool(get_template, template_id) if template_id else None
+        tmpl_name = tmpl["name"] if tmpl else "Default"
+
+        eval_scores = None
+        if auto_evaluate:
+            scores_dict = await run_in_threadpool(
+                evaluation_service.score_answer, question, ask_resp.answer, raw_chunks
+            )
+            eval_scores = EvalScores(**{k: v for k, v in scores_dict.items() if k != "details"})
+
+        run_id = await run_in_threadpool(
+            experiment_service.save_run,
+            question, ask_resp.answer, template_id, tmpl_name,
+            top_k or settings.DEFAULT_TOP_K, ask_resp.llm_used, ask_resp.retrieval_count, "single",
+        )
+
+        if auto_evaluate and eval_scores:
+            await run_in_threadpool(evaluation_service.save_evaluation, run_id, scores_dict)
+
+        ask_resp.evaluation        = eval_scores
+        ask_resp.experiment_run_id = run_id
+    except Exception as exc:
+        logger.warning("Experiment tracking failed (non-fatal): %s", exc)
+
+    try:
+        from app.services import safety_service
+
+        ask_resp.input_safety  = await safety_service.check_text_async(question)
+        ask_resp.output_safety = await safety_service.check_text_async(ask_resp.answer)
+
+        source_text = " ".join(c["text"] for c in raw_chunks)
+        ask_resp.groundedness_flag = await run_in_threadpool(
+            safety_service.check_groundedness, ask_resp.answer, source_text
+        )
+    except Exception as exc:
+        logger.warning("Safety screening failed (non-fatal): %s", exc)
+
+    return ask_resp
