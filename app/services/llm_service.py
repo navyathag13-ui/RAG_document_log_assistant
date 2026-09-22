@@ -98,3 +98,37 @@ def get_chat_client():
 
 def is_configured() -> bool:
     return resolve().provider != "none"
+
+
+def get_async_chat_client():
+    """
+    Async counterpart of get_chat_client(): returns (client, model_name, provider)
+    using AsyncOpenAI / AsyncAzureOpenAI, or (None, "", "none") if unconfigured.
+
+    Exists because a real network call (the LLM round-trip) held open inside a sync
+    `def` route ties up one of FastAPI's limited threadpool workers for the entire
+    wait — under concurrent load that serializes requests behind the pool size
+    (measured: bench/before_sync.json, p50 latency 11.6s at 30 concurrent requests
+    vs 1.7s at 5). An async client awaited from an `async def` route releases the
+    worker back to the event loop while waiting on the network, so concurrent
+    requests genuinely overlap instead of queuing for a thread.
+    """
+    resolved = resolve()
+
+    if resolved.provider == "azure_openai":
+        from openai import AsyncAzureOpenAI
+
+        client = AsyncAzureOpenAI(
+            azure_endpoint=resolved.endpoint,
+            api_key=resolved.api_key,
+            api_version=resolved.api_version,
+        )
+        return client, resolved.model, "azure_openai"
+
+    if resolved.provider == "openai":
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(api_key=resolved.api_key, base_url=resolved.endpoint)
+        return client, resolved.model, "openai"
+
+    return None, "", "none"

@@ -45,11 +45,18 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
     Generate embeddings for a list of strings.
 
     Returns a list of float vectors (one per input text).
+
+    Serialised with _lock: sentence-transformers' underlying torch inference is not safe to call
+    concurrently from multiple threads on this stack (verified — concurrent unlocked .encode() calls
+    from FastAPI's threadpool crashed the whole process with no Python traceback, a native-level
+    crash, not an exception). _lock was previously only guarding the lazy model load, not inference;
+    reused here rather than adding a second lock, since the model is a single shared object either way.
     """
     if not texts:
         return []
     model = get_model()
-    vectors = model.encode(texts, show_progress_bar=False, convert_to_numpy=True)
+    with _lock:
+        vectors = model.encode(texts, show_progress_bar=False, convert_to_numpy=True)
     return [v.tolist() for v in vectors]
 
 
