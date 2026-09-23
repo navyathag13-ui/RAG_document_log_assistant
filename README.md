@@ -411,7 +411,7 @@ docker run -p 8000:8000 --env-file .env rag-assistant
 
 The embedding model is baked into the image at build time, so a fresh container is ready to serve immediately without needing to reach Hugging Face at runtime — only whichever LLM/Content Safety endpoints are configured, if any.
 
-**Verified**: built from a clean clone and run (Apple silicon, Docker 29.8.0); `/health`, `/ingest`, `/search` and `/ask` (offline mode) all worked. **Not verified**: amd64 builds, and running the container against live Azure endpoints.
+**Verified**: built from a clean clone and run (Apple silicon, Docker 29.8.0); `/health`, `/ingest`, `/search` and `/ask` (offline mode) all worked. **Next**: an amd64 build, and running the container against the live Azure endpoints.
 
 ### Azure Container Apps
 
