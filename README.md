@@ -6,6 +6,16 @@ Built to match the AI-103 (Azure AI Apps and Agents Developer Associate) syllabu
 
 ---
 
+## Highlights
+
+- Ask questions of your own manuals and logs and get answers with the exact source passages attached
+- An **Azure OpenAI** powered assistant and a **Semantic Kernel agent** that chooses between tools, both run live against real Azure resources
+- **Azure AI Content Safety** screening plus a groundedness check on answers
+- Still fully usable **offline** with no cloud services at all
+- An async `/ask` endpoint, benchmarked (roughly 2 to 3 times the throughput offline at 20 concurrent requests)
+- A Docker image that builds from a clean clone and serves the API, plus Azure Container Apps deployment scripts and OpenTelemetry monitoring
+
+
 ## Why I built this
 
 If you have ever worked around industrial equipment, you know the routine. Something throws a fault code, and somebody digs through a PDF manual, a folder of service notes and a log file to work out what it means. This project is my attempt at making that faster: you upload the documents, ask a question in plain English, and get an answer with the exact passages it came from. If the documents don't say, it tells you that instead of guessing.
