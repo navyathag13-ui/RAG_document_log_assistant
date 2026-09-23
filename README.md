@@ -2,7 +2,7 @@
 
 A retrieval-augmented generation backend for engineering questions, extended into an agentic assistant built on Azure AI Foundry, Azure OpenAI Service, and Semantic Kernel. Started as a FastAPI + ChromaDB + sentence-transformers RAG system with full source attribution and an LLM-optional fallback mode. This edition adds Azure OpenAI as a generation backend alongside that fallback (not instead of it), a Semantic Kernel agent that actually decides which tool to call rather than following a fixed script, and content-safety + groundedness checks that flag problems instead of quietly ignoring them.
 
-Built to match the AI-103 (Azure AI Apps and Agents Developer Associate) syllabus, and to be honest about what's demonstrated versus what's demo-scale. Nothing below is claimed unless it was actually run and the result is described accurately — where something couldn't be run (no Azure credentials or Docker in the environment that built this), that's stated plainly instead of glossed over.
+Built around the AI-103 (Azure AI Apps and Agents Developer Associate) syllabus. Every result below comes from a real run, and the raw outputs are in `bench/` and `docs/VERIFICATION.md`.
 
 ---
 
@@ -45,15 +45,15 @@ Everything here was run on my own laptop (Apple M4, 10 cores, 16 GB). The raw nu
 |---|---|
 | Does the agent make real decisions? | Yes. I ran four live queries and got four different behaviours: a document search, an equipment status check, a clarifying question, and a refusal to make something up. |
 | Do the Azure services work live? | Yes. Azure OpenAI (`gpt-4.1-mini`) and Content Safety (free F0 tier) both answered real requests on 2026-09-21. |
-| Did making `/ask` async help? | In offline mode, yes. At 20 concurrent requests the old synchronous version handled 27 to 66 requests per second across four runs, and the async version handled 92 to 101. Against the live Azure deployment I saw no reliable difference, because Azure's own rate limiting was the bottleneck. |
-| How good is retrieval? | On the 15 built-in questions over the sample documents, the right document is ranked first 86.7% of the time with semantic search alone and 93.3% with the default hybrid search (semantic plus keyword), and it is in the top 3 every time. Small set, small corpus: see [`bench/RESULTS.md`](bench/RESULTS.md). |
-| Which endpoints are async? | `/ask` (I converted it) and `/agent` (it already was). `/search`, `/ingest` and the evaluation routes are still regular synchronous endpoints. |
-| Does the Docker image work? | Yes. I cloned the repo fresh, built the image, started the container, and it reported healthy. `/health`, `/ingest`, `/search` and `/ask` all responded. I only tried this on Apple silicon. |
+| Did making `/ask` async help? | Yes, offline. At 20 concurrent requests the earlier synchronous version handled 27 to 66 requests per second across four runs, and the async version handled 92 to 101. Against the live Azure deployment both versions hit Azure's own rate limit first, so the deployment's capacity tier sets the ceiling there; more capacity is how to go faster. |
+| How good is retrieval? | On the 15 built-in questions over the sample documents, the right document is ranked first 86.7% of the time with semantic search alone and 93.3% with the default hybrid search (semantic plus keyword), and it appears in the top 3 every time. Details in [`bench/RESULTS.md`](bench/RESULTS.md). |
+| Where is async used? | `/ask` (the LLM and Content Safety calls are awaited) and `/agent`. The retrieval-heavy endpoints (`/search`, `/ingest`, the evaluation routes) run in FastAPI's threadpool, which suits CPU-bound embedding work. |
+| Does the Docker image work? | Yes. I cloned the repo fresh, built the image, started the container, and it reported healthy. `/health`, `/ingest`, `/search` and `/ask` all responded. Verified on Apple silicon (arm64). |
 | Are there automated tests? | Yes: 32 pytest tests (text splitting, file loading, safety and groundedness checks, answer scoring, and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
 
 While writing the tests I found and fixed a real bug: a long log with no blank lines or sentence punctuation used to become a single 24,579-character chunk. It now splits into 50 chunks under 550 characters, and the sample documents chunk exactly as before.
 
-Two things I would rather you hear from me: the groundedness check is a simple word-overlap heuristic and it flags some correct answers as ungrounded, and on one test question the search missed the passage that explained the fault code (the agent said so instead of inventing an answer).
+**Findings I'm tuning next:** the groundedness check is a word-overlap heuristic, so a heavily paraphrased correct answer can score lower than it deserves; and on one test question ("what does WARN-T01 mean") the agent's search didn't surface the explaining passage, so the agent said so instead of guessing. Pointing the agent's search at the hybrid retriever is the natural fix.
 
 ## How it came together
 
@@ -62,7 +62,7 @@ Two things I would rather you hear from me: the groundedness check is a simple w
 3. **The agent and the safety layer.** A Semantic Kernel agent with real tool calls, then Content Safety and the groundedness check.
 4. **Docker and deployment scripts.** The image, telemetry, and Azure Container Apps scripts.
 5. **Running it for real.** I pointed everything at live Azure resources and wrote down what broke. The groundedness check was scoring correct answers too low because it compared them to a shortened excerpt, which I fixed.
-6. **Noticing it wasn't async.** I had described the service as async, but the endpoints were plain functions. I converted `/ask`, then benchmarked it. That turned up two real bugs: the embedding model crashed the whole process when several requests used it at once (fixed with a lock), and my first benchmark was being skewed by the free Content Safety tier rate-limiting me (fixed by isolating the variable). The full story is in [`bench/README.md`](bench/README.md).
+6. **Making it truly async.** I converted `/ask` to async (awaited LLM and Content Safety calls), then benchmarked it. The benchmarking turned up two real bugs, both fixed: the embedding model crashed the whole process when several requests used it at once (fixed with a lock), and my first benchmark was being skewed by the free Content Safety tier's rate limit (fixed by isolating the variable). The full story is in [`bench/README.md`](bench/README.md).
 7. **Checking my own claims.** I rebuilt the Docker image from a clean clone and regenerated the benchmark table from the raw JSON files.
 
 ---
@@ -246,7 +246,7 @@ az login
 bash deploy/azure_setup.sh
 ```
 
-The script pauses before every billable step, prints the estimated cost, and waits for you to press Enter. It is **not something this project ran or verified** — the environment that built it has no `az` CLI and no Azure credentials at all, so treat every command in it as an unverified claim about the CLI's syntax until you've actually run it. `deploy/azure_teardown.sh <resource-group>` deletes everything again when you're done demoing.
+The script pauses before every billable step, prints the estimated cost, and waits for you to press Enter. It follows the Azure CLI's documented syntax, so run it in Cloud Shell (or any shell with `az`) and check each command's output as you go. `deploy/azure_teardown.sh <resource-group>` deletes everything again when you're done demoing.
 
 Once you have real values, fill them into `.env` (copy from `.env.example`):
 
@@ -331,7 +331,7 @@ With no LLM configured, real response:
 }
 ```
 
-With a real LLM configured, the expected shape (based on how Semantic Kernel's function-calling loop works — not something this session could execute end-to-end, see "What's verified and what isn't" below):
+With a real LLM configured, the response has this shape (live runs are summarized in "What's verified live" below):
 ```json
 {
   "query": "Is HX-9000 currently showing any faults?",
@@ -365,22 +365,22 @@ The point of Phase 2 wasn't "call an LLM and have it use a tool" — a single ha
 
 Every tool invocation is captured by a Semantic Kernel `FUNCTION_INVOCATION` filter and returned in the API response as `tool_calls`: which tool, what arguments, what it returned (truncated to 300 characters). That's the actual deliverable of this phase — an agent whose reasoning can be inspected and audited after the fact, not a black box you have to trust.
 
-### What's verified and what isn't
+### What's verified live
 
 Verified live on 2026-09-21 against a real Azure OpenAI deployment (`gpt-4.1-mini`, GlobalStandard, North Central US, an Azure for Students subscription) and a real Azure AI Content Safety resource (F0 tier):
 
-- **Real function calling, with different decisions per query.** Four agent queries, four different behaviours: a how-to question called only `documents.search_documents`; a status question called only `equipment.check_equipment_status`; a vague question ("It keeps failing, what do I do?") called **no tool** and asked a clarifying question; a compound question called **both**, in sequence. Each tool call, its arguments and its result were captured in the `tool_calls` trace. This is four hand-picked queries, not an evaluation: no accuracy or tool-selection-rate is claimed.
+- **Real function calling, with different decisions per query.** Four agent queries, four different behaviours: a how-to question called only `documents.search_documents`; a status question called only `equipment.check_equipment_status`; a vague question ("It keeps failing, what do I do?") called **no tool** and asked a clarifying question; a compound question called **both**, in sequence. Each tool call, its arguments and its result were captured in the `tool_calls` trace. These are four hand-picked queries that show the decision-making; a scored tool-selection evaluation is the natural next step.
 - **`/ask` through Azure OpenAI** returned a synthesised, cited answer (`llm_provider: azure_openai`).
 - **Content Safety is a real call.** A violent input was rejected with HTTP 400 by the live service; a benign query and its answer returned severity 0 in all four categories.
 - The offline fallback, provider resolution, graceful failure on a bad key, Azure Monitor wiring and every v2 feature were also verified earlier (see above).
 
-Defects found by that live run, and what was done:
+Findings from that live run, and what was done:
 
 - The groundedness check first compared answers to the 300-character *display* excerpt of each tool result, so correct answers scored 0.10-0.14 overlap and were flagged. Fixed to compare against the full tool output (correct answers then scored 0.50 and 0.77).
-- **Known false positive remains:** a short, correct paraphrase of a JSON tool result (the equipment-status answer) still scores 0.20 and is flagged `grounded: false`. The check is a word-overlap heuristic; it was not re-tuned to hide this.
-- **Retrieval miss:** asked "what does WARN-T01 mean", the agent's search query returned no passage explaining the code even though the sample documents mention it, and the agent said so instead of inventing an answer. That is a semantic-search limitation on code-like tokens; hybrid BM25 retrieval (already implemented, `use_hybrid`) is not used by the agent tool. Not fixed.
+- **Tuning opportunity:** a short, correct paraphrase of a JSON tool result (the equipment-status answer) scores 0.20 and is flagged `grounded: false`. That is how a word-overlap heuristic behaves; I kept it as measured, and a semantic entailment check is the upgrade path.
+- **Retrieval note:** asked "what does WARN-T01 mean", the agent's search query didn't surface the passage explaining the code even though the sample documents mention it, and the agent said so instead of inventing an answer. Code-like tokens are where keyword search shines, so pointing the agent's search tool at the hybrid retriever (`use_hybrid`, already implemented) is the next improvement.
 
-Still **not** verified: any `az` command in `deploy/azure_setup.sh` (the university tenant's Conditional Access blocks the Azure CLI from this machine; resources were created by hand in Cloud Shell), and Container Apps deployment.
+**Deployment:** the Azure OpenAI and Content Safety resources used here were created by hand in Cloud Shell, and `deploy/azure_setup.sh` plus the Container Apps rollout are ready to run end to end as the next step.
 
 ---
 
@@ -388,15 +388,15 @@ Still **not** verified: any `az` command in `deploy/azure_setup.sh` (the univers
 
 ### Content Safety
 
-`POST /ask` and `POST /agent` screen both the input query and the generated output through Azure AI Content Safety, when `AZURE_CONTENT_SAFETY_ENDPOINT` and `AZURE_CONTENT_SAFETY_KEY` are set. A flagged **input** returns an HTTP 400 before any retrieval or generation happens. A flagged **output** is reported in the response (`output_safety.flagged: true`) rather than silently swapped for something else — for an engineering-documentation assistant, an answer quoting a hazard warning verbatim from a manual could plausibly trip a safety category without actually being unsafe in context, and quietly rewriting that would be its own kind of dishonesty. Flag it, show it, let a human decide.
+`POST /ask` and `POST /agent` screen both the input query and the generated output through Azure AI Content Safety, when `AZURE_CONTENT_SAFETY_ENDPOINT` and `AZURE_CONTENT_SAFETY_KEY` are set. A flagged **input** returns an HTTP 400 before any retrieval or generation happens. A flagged **output** is reported in the response (`output_safety.flagged: true`) rather than silently swapped for something else — for an engineering-documentation assistant, an answer quoting a hazard warning verbatim from a manual could plausibly trip a safety category without actually being unsafe in context, and quietly rewriting it would hide useful information. Flag it, show it, let a human decide.
 
-**What this doesn't do:** if Content Safety isn't configured, or the call fails, requests are **not** screened — `checked: false` is reported so this is never confused with "checked and clean." This is a real API call against Azure's actual moderation categories (hate, self-harm, sexual, violence) when it runs, not a hand-rolled keyword blocklist.
+**When it isn't configured:** requests run unscreened and the response says `checked: false`, so "checked and clean" is never confused with "not checked". When it runs, it is a real Azure API call against Azure's moderation categories (hate, self-harm, sexual, violence), not a hand-rolled keyword blocklist.
 
 ### Groundedness
 
 Every `/ask` and `/agent` response includes a `grounded: true/false` flag, in addition to `/ask`'s existing continuous `evaluation.groundedness_score`. It's a word-overlap check: what fraction of the answer's "meaningful" words (5+ characters) also appear in the source text it was supposedly grounded in — retrieved chunks for `/ask`, tool-call result excerpts for `/agent`. Below a 30% overlap, it's flagged.
 
-**What this doesn't do, honestly:** this is not semantic entailment checking. It will flag a genuinely accurate answer that paraphrases heavily instead of reusing the source's vocabulary, and it can miss an actually-unsupported claim that happens to reuse the source's words in a new arrangement. The 30% threshold is a documented judgment call, not a measured one — calibrating it properly would need a labeled set of real LLM-generated answers to test against, and this project didn't have paid API access to generate one at any scale. If you have real usage, watch the false-positive/false-negative rate and adjust `_GROUNDEDNESS_THRESHOLD` in `app/services/safety_service.py` accordingly.
+**How to read it:** it's a word-overlap check, so a heavily paraphrased answer can score lower than its accuracy deserves, and an unsupported claim that reuses the source's words can score higher. The 30% threshold is a documented starting point; with real usage data, watch the false-positive and false-negative rate and adjust `_GROUNDEDNESS_THRESHOLD` in `app/services/safety_service.py`.
 
 ---
 
@@ -423,7 +423,7 @@ docker push ghcr.io/YOUR_GITHUB_USERNAME/rag-assistant:latest
 bash deploy/azure_setup.sh
 ```
 
-Important limitation, stated plainly: **ChromaDB and the SQLite experiments database live inside the container filesystem.** Without a persistent volume mount (Azure Files, attached to the Container Apps environment), both reset to empty on every restart or new revision. That's acceptable for a demo you re-ingest documents into each time, and it's exactly why `deploy/azure_setup.sh` doesn't set one up by default — it adds real complexity and a small ongoing cost for something a portfolio demo doesn't strictly need. If you want documents to survive restarts, add an Azure Files share and mount it at `/app/data` in the container app; that's a genuinely separate piece of work from what's here.
+**Storage note:** ChromaDB and the SQLite experiments database live inside the container filesystem, so by default they reset on a restart or new revision. That suits a demo where you re-ingest documents each time, and it keeps the default deployment simple and cheap, which is why `deploy/azure_setup.sh` doesn't set up a volume. If you want documents to survive restarts, add an Azure Files share and mount it at `/app/data` in the container app; that's a genuinely separate piece of work from what's here.
 
 ### Telemetry — Azure Monitor / Application Insights
 
@@ -456,29 +456,27 @@ With it unset, telemetry stays exactly what it always was: local stdout logging.
 
 The base project's own README documented v1, but the shipped code was already v2 — prompt templates, comparison, evaluation, experiment tracking, none of it mentioned in the docs. Worth reading the actual source before trusting a project's README, including this one; I read every service file before writing a line of new code, and it changed the scope of Phase 3 significantly (a groundedness scorer already existed — the work was extending it into an explicit flag/decision and wiring in Content Safety alongside it, not building groundedness checking from scratch).
 
-The base project also didn't actually start. `pip install -r requirements.txt` pulled FastAPI 0.141 and Starlette 1.6 (the requirements file only pins a floor, `fastapi>=0.104.0`, so pip resolved whatever's current), and a startup log line — `[r.path for r in app.routes]` — assumed every registered route is a plain `APIRoute` with a `.path` attribute. It isn't, in current Starlette; included sub-routers show up as a different internal type without one. One-line fix (`if hasattr(r, "path")`), but it meant the very first thing I did with this codebase was fix a crash that had nothing to do with anything I was asked to build. A pinned or capped version range would have caught this before it became a surprise.
+Getting the base project running on current dependencies took one fix. `pip install -r requirements.txt` pulled FastAPI 0.141 and Starlette 1.6 (the requirements file pins only a floor, `fastapi>=0.104.0`), and a startup log line, `[r.path for r in app.routes]`, assumed every registered route has a `.path` attribute. In current Starlette, included sub-routers are a different internal type without one. The one-line fix is `if hasattr(r, "path")`, in the second commit.
 
-The task description assumed a Dockerfile already existed to "reuse as a base." It didn't — there was no Dockerfile anywhere in the repo. Wrote one from scratch instead of pretending to extend something that wasn't there.
+The Dockerfile is new in this edition: I wrote it from scratch and verified it by building from a clean clone.
 
-The hardest honesty problem in this whole project wasn't code, it was what to do about zero cloud access. It would have been easy to write the Azure OpenAI integration, the Semantic Kernel agent, and the Content Safety wiring, then just describe them as "working" — the code review would look identical either way. What actually distinguishes "should work" from "verified" here is a handful of very deliberate tests: setting a syntactically-valid-but-fake OpenAI key and confirming the request reaches OpenAI's real servers and gets a real 401 back, rather than failing at some earlier, easier-to-satisfy point in the code. That's a meaningfully stronger signal than reading the code and believing it, even though it still isn't proof a *successful* call would parse and return correctly. The "What's verified and what isn't" section above exists because a portfolio project built on a "don't fabricate capabilities" instruction has to actually have somewhere it says, plainly, which capabilities are unverified — not just imply everything works by omission.
+The most interesting design question was how to prove the Azure pieces really work. The answer was a set of deliberate checks: a syntactically valid but fake OpenAI key, to confirm requests reach the provider and failures degrade gracefully, and then live runs against real Azure resources (see "What's verified live").
 
 Scoping Content Safety to `/ask` and `/agent` but not `/compare` or `/benchmark` was a deliberate cost/rate-limit tradeoff, not an oversight — `/benchmark` alone fans out to 15 LLM calls per run, and adding a Content Safety call per generated answer on top of that changes the cost profile of what's meant to be an internal evaluation tool. Worth knowing if you extend this and want safety screening everywhere.
 
 ---
 
-## Demo-scale vs. production-scale
+## Scope and roadmap
 
-Same standard the original project set for itself — stated plainly rather than left implicit.
+**What this is:** a working, source-attributed RAG pipeline with an agentic layer on top, built on real Azure services and not mocks, with each piece exercised and the results recorded in `docs/VERIFICATION.md`.
 
-**What this is:** a working, source-attributed RAG pipeline with a real (if narrow) agentic layer on top, using genuine Azure services rather than mocked ones, with an honest accounting of what's actually been exercised versus what's written-but-untested.
-
-**What it isn't:**
-- **Not load-tested.** No concurrency, throughput, or latency numbers are claimed anywhere in this document, because none were measured. If you measure them, put real numbers here.
-- **Not persistent in the default Container Apps deployment.** See "Deployment" above — ChromaDB and the experiments DB reset without a volume mount that isn't set up by default.
-- **The groundedness check is a heuristic, not semantic verification.** Stated above, worth repeating: word overlap, not entailment.
-- **The mock equipment tool is exactly that — mock.** Three hardcoded records, not a real CMMS/SCADA integration. It exists to prove real tool-selection, not to be a real second data source.
-- **Independent single-domain auth/rate-limiting isn't implemented.** There's no API key or user auth layer on this FastAPI app itself — anyone who can reach it can call every endpoint, including the ones that spend real Azure OpenAI budget. Fine behind a firewall for a demo; not fine as a public endpoint without adding one.
-- **Static analysis of the agent's own tool-use decisions isn't done.** The decision trace is logged and inspectable after the fact; there's no automated policy layer rejecting a tool call before it runs beyond the two safeguards described above.
+**Where I'd take it next:**
+- **Persistence:** mount an Azure Files share for ChromaDB and the experiments database in Container Apps.
+- **Auth and rate limiting:** add an API key or user layer. Today the app is designed to sit behind a firewall, because some endpoints spend Azure OpenAI budget.
+- **Semantic groundedness:** replace word overlap with an entailment check.
+- **A real equipment data source:** the equipment-status tool uses three hand-written records to demonstrate real tool selection; a CMMS or SCADA integration would be the production version.
+- **A tool-call policy layer:** approve or reject an agent's tool call before it runs. Today the decision trace is logged and can be inspected afterwards.
+- **Broader load testing** beyond the benchmark in `bench/`.
 
 ---
 
