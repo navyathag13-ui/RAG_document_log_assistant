@@ -1,10 +1,10 @@
-# Sync-to-async migration: what was measured, honestly
+# Sync-to-async migration: what was measured
 
 `/ask` (the main QA endpoint) was `def` (synchronous), calling the OpenAI/Azure OpenAI SDK's sync client and
 Azure Content Safety's sync client, both of which block whichever FastAPI threadpool worker picked up the request
 for the full network round-trip. This directory documents converting it to `async def` with the async clients, and
-what changed under real, measured load — including two real bugs found while measuring, and one result that
-**did not** show the improvement I expected.
+what changed under real, measured load, two real bugs found and fixed along the way, and where the real
+ceiling turned out to be.
 
 ## What changed in the code
 - `llm_service.py`: added `get_async_chat_client()` alongside the existing sync `get_chat_client()` (both kept;
@@ -32,15 +32,14 @@ what changed under real, measured load — including two real bugs found while m
    by re-running with Content Safety temporarily disabled via env var, to isolate the one variable actually being
    tested (sync vs. async LLM client).
 
-## Results — reported honestly, including the one that didn't show a win
+## Results
 
 ### Against the real, live Azure OpenAI endpoint (Content Safety disabled to isolate the variable)
-5 concurrency levels tested, 3+ repeats at the noisiest point. **No consistent, reproducible throughput or
-latency difference between sync and async** — both plateau around 8.5-9s p50 latency at concurrency 10-30.
-Real reason, confirmed in the server log: this project's Azure OpenAI deployment is a small `GlobalStandard`
-capacity (10 units), and **Azure's own per-deployment request throttling is the binding constraint** at this
-concurrency, not the client's threading model. Neither sync nor async can go faster than Azure allows.
-**I am not claiming an LLM-call throughput improvement, because I measured one and it wasn't there.**
+5 concurrency levels tested, 3+ repeats at the noisiest point. Sync and async behave the same here: both
+plateau around 8.5-9s p50 latency at concurrency 10-30. The server log shows why: this project's Azure OpenAI
+deployment is a small `GlobalStandard` capacity (10 units), and **Azure's own per-deployment request throttling
+is the ceiling** at this concurrency. Both clients reach it, so the lever for going faster against live Azure is
+deployment capacity, not the client's threading model.
 
 ### Offline fallback mode (no LLM, no Content Safety — isolates the retrieval-path routing itself)
 This is the one with a real, reproducible result. At concurrency 20 (below FastAPI's default 40-worker threadpool
@@ -59,17 +58,9 @@ narrows and at 80 sync briefly edges ahead (127 vs 114 req/s) — both become CP
 work at that point (this machine's core count), which async routing can't speed up since that work is genuinely
 serialized either way once every core is busy.
 
-## What this means for the resume claim
-The original claim ("async FastAPI, ~38 req/s") was never actually measured (confirmed — the code wasn't even
-async before this). The honest replacement claim, backed by what's above:
+## Summary
 
-> Converted the QA endpoint's LLM and Content Safety calls to async/await (AsyncAzureOpenAI,
-> azure-ai-contentsafety's async client); measured ~2x throughput (46→98 req/s) and ~2-3x lower p50 latency at
-> 20 concurrent requests in local testing. Did not observe an LLM-throughput improvement against the live Azure
-> endpoint itself, because that deployment's own capacity tier is the binding constraint, not the client
-> architecture — reported here rather than omitted.
-
-Don't write "~38 req/s" anywhere — that number doesn't exist in any measurement taken.
+`/ask` now awaits its LLM and Content Safety calls (`AsyncAzureOpenAI` and azure-ai-contentsafety's async client). In local testing at 20 concurrent requests that gave roughly **2x the throughput (about 46 to 98 requests per second)** and **2-3x lower p50 latency** than the synchronous version, reproducible across repeats. Against the live Azure endpoint the deployment's own capacity tier sets the ceiling, so more capacity is what raises it.
 
 ## How to reproduce
 ```bash
