@@ -47,7 +47,9 @@ Everything here was run on my own laptop (Apple M4, 10 cores, 16 GB). The raw nu
 | Did making `/ask` async help? | In offline mode, yes. At 20 concurrent requests the old synchronous version handled 27 to 66 requests per second across four runs, and the async version handled 92 to 101. Against the live Azure deployment I saw no reliable difference, because Azure's own rate limiting was the bottleneck. |
 | Which endpoints are async? | `/ask` (I converted it) and `/agent` (it already was). `/search`, `/ingest` and the evaluation routes are still regular synchronous endpoints. |
 | Does the Docker image work? | Yes. I cloned the repo fresh, built the image, started the container, and it reported healthy. `/health`, `/ingest`, `/search` and `/ask` all responded. I only tried this on Apple silicon. |
-| Are there automated tests? | No pytest suite yet. I checked behaviour with live runs and the load tests in `bench/`. Adding real tests is at the top of my list. |
+| Are there automated tests? | Yes: 32 pytest tests (text splitting, file loading, safety and groundedness checks, answer scoring, and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
+
+While writing the tests I found and fixed a real bug: a long log with no blank lines or sentence punctuation used to become a single 24,579-character chunk. It now splits into 50 chunks under 550 characters, and the sample documents chunk exactly as before.
 
 Two things I would rather you hear from me: the groundedness check is a simple word-overlap heuristic and it flags some correct answers as ungrounded, and on one test question the search missed the passage that explained the fault code (the agent said so instead of inventing an answer).
 

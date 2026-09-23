@@ -68,7 +68,11 @@ def _split_by_sentence(text: str, chunk_size: int, chunk_overlap: int) -> list[s
     Splits on sentence boundaries ('. ', '! ', '? ') with overlap.
     """
     import re
-    sentences = re.split(r"(?<=[.!?])\s+", text)
+    sentences = [
+        piece
+        for sentence in re.split(r"(?<=[.!?])\s+", text)
+        for piece in _break_long_unit(sentence, chunk_size)
+    ]
     chunks: list[str] = []
     current = ""
 
@@ -86,3 +90,54 @@ def _split_by_sentence(text: str, chunk_size: int, chunk_overlap: int) -> list[s
         chunks.append(current)
 
     return chunks if chunks else [text[:chunk_size]]
+
+
+def _break_long_unit(unit: str, chunk_size: int) -> list[str]:
+    """
+    Break a single "sentence" that is still longer than chunk_size.
+
+    Log files and tables often have no sentence punctuation, so a long run of
+    lines would otherwise become one giant chunk. Prefer line boundaries, then
+    word boundaries, and only cut mid-word when there is no whitespace at all.
+    """
+    if len(unit) <= chunk_size:
+        return [unit]
+
+    pieces: list[str] = []
+    current = ""
+    for line in unit.split("\n"):
+        for word_group in _fit_words(line, chunk_size):
+            candidate = (current + "\n" + word_group) if current else word_group
+            if len(candidate) <= chunk_size:
+                current = candidate
+            else:
+                if current:
+                    pieces.append(current)
+                current = word_group
+    if current:
+        pieces.append(current)
+    return pieces
+
+
+def _fit_words(line: str, chunk_size: int) -> list[str]:
+    """Split one line into pieces of at most chunk_size, on spaces where possible."""
+    if len(line) <= chunk_size:
+        return [line]
+    out: list[str] = []
+    current = ""
+    for word in line.split(" "):
+        while len(word) > chunk_size:  # no whitespace to use: hard cut
+            if current:
+                out.append(current)
+                current = ""
+            out.append(word[:chunk_size])
+            word = word[chunk_size:]
+        candidate = (current + " " + word) if current else word
+        if len(candidate) <= chunk_size:
+            current = candidate
+        else:
+            out.append(current)
+            current = word
+    if current:
+        out.append(current)
+    return out

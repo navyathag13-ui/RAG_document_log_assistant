@@ -40,8 +40,11 @@ See [`../bench/RESULTS.md`](../bench/RESULTS.md) (table generated from the raw J
 
 I compared the four real values in my local `.env` (Azure OpenAI endpoint and key, Content Safety endpoint and key) against every commit in the repository history. None of them appear anywhere. `.env` is git-ignored and only `.env.example` files with empty placeholders are tracked.
 
+## Automated tests (2026-09-23)
+
+`python -m pytest tests -q`: 32 passed (offline, temporary vector store, no cloud services). Writing them exposed a chunking bug: a 400-line log with no blank lines or sentence punctuation became one 24,579-character chunk. After the fix it splits into 50 chunks (max 546 characters) and the four sample documents chunk exactly as before (17, 15, 10 and 23 chunks). Regression tests cover it.
+
 ## Not done yet
 
-- No automated pytest suite
 - No amd64 image test
 - No Container Apps deployment
