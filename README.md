@@ -6,6 +6,31 @@ Built to match the AI-103 (Azure AI Apps and Agents Developer Associate) syllabu
 
 ---
 
+## Problem statement
+
+Engineers troubleshooting equipment lose time searching manuals, logs and notes. This project answers questions from those documents with sources attached, and refuses to invent an answer when the documents don't contain one. The goals: grounded answers, an agent that chooses between tools instead of always searching, safety checks with an honest account of what they can and can't catch, and measured (not assumed) performance.
+
+## Results (all measured; details in [`bench/RESULTS.md`](bench/RESULTS.md) and [`bench/README.md`](bench/README.md))
+
+| Question | Result |
+|---|---|
+| Does the agent make real, different tool decisions? | Yes. 4 live queries gave 4 different behaviours (search, status check, clarifying question, refusal to invent). |
+| Do Azure OpenAI and Content Safety work live? | Yes, verified against real `gpt-4.1-mini` and Content Safety (F0) endpoints on 2026-09-21. |
+| Does making `/ask` async help? | **Offline (retrieval-only) mode: yes.** At 20 concurrent requests, throughput was 27-66 req/s sync vs 92-101 req/s async across 4 runs (Apple M4); the saved raw run is 27.3 vs 97.5. **Live Azure mode: no measurable gain**, because Azure's own rate limits were the bottleneck. |
+| Which endpoints are async? | Only `/ask` (LLM + Content Safety calls) was converted; `/agent` was already async. `/search`, `/ingest` and the evaluation routes are still synchronous. |
+| Does the Docker image build and run from a clean clone? | Yes: built from a fresh `git clone`; the container reported healthy and `/health`, `/ingest`, `/search`, `/ask` worked. Apple silicon only; amd64 and Azure Container Apps deployment were not tested. |
+| Known weaknesses | The groundedness check is a word-overlap heuristic with known false positives; a retrieval miss on one test query is documented below. |
+
+## How we got here
+
+1. Started from a working FastAPI + ChromaDB RAG service with a React frontend (the earlier commits).
+2. Added Azure OpenAI alongside the offline fallback, then a Semantic Kernel agent with real function calling, then Content Safety and groundedness checks, then Docker and Azure deployment scripts (Phases 1-5 in the commit history).
+3. Ran everything against live Azure resources and wrote down what failed (see "What's verified and what isn't").
+4. Found that the service was not actually async, so converted `/ask`, then benchmarked it. That surfaced two real bugs (an embedding-model thread-safety crash, and Content Safety's free-tier rate limit confounding the first benchmark), both fixed and both documented in `bench/README.md`.
+5. Audited the claims: built the Docker image from a clean clone and ran it, and re-derived the benchmark table from raw JSON.
+
+---
+
 ## What it does
 
 | Capability | Detail |
@@ -319,7 +344,7 @@ Defects found by that live run, and what was done:
 - **Known false positive remains:** a short, correct paraphrase of a JSON tool result (the equipment-status answer) still scores 0.20 and is flagged `grounded: false`. The check is a word-overlap heuristic; it was not re-tuned to hide this.
 - **Retrieval miss:** asked "what does WARN-T01 mean", the agent's search query returned no passage explaining the code even though the sample documents mention it, and the agent said so instead of inventing an answer. That is a semantic-search limitation on code-like tokens; hybrid BM25 retrieval (already implemented, `use_hybrid`) is not used by the agent tool. Not fixed.
 
-Still **not** verified: `docker build` (no Docker here), any `az` command in `deploy/azure_setup.sh` (the university tenant's Conditional Access blocks the Azure CLI from this machine; resources were created by hand in Cloud Shell), and Container Apps deployment.
+Still **not** verified: any `az` command in `deploy/azure_setup.sh` (the university tenant's Conditional Access blocks the Azure CLI from this machine; resources were created by hand in Cloud Shell), and Container Apps deployment.
 
 ---
 
@@ -350,7 +375,7 @@ docker run -p 8000:8000 --env-file .env rag-assistant
 
 The embedding model is baked into the image at build time, so a fresh container is ready to serve immediately without needing to reach Hugging Face at runtime — only whichever LLM/Content Safety endpoints are configured, if any.
 
-**Not verified**: this Dockerfile was written and reviewed carefully but never actually built — there was no Docker daemon in the environment that wrote it. Build it and report back if anything's broken.
+**Verified**: built from a clean clone and run (Apple silicon, Docker 29.8.0); `/health`, `/ingest`, `/search` and `/ask` (offline mode) all worked. **Not verified**: amd64 builds, and running the container against live Azure endpoints.
 
 ### Azure Container Apps
 
