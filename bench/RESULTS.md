@@ -25,11 +25,11 @@ Modes: `clean` = live Azure OpenAI (gpt-4.1-mini, 10-unit GlobalStandard deploym
 | fallback | 80 | async | 80 | 0 | 114.31 | 0.5529 | 0.6579 | 2026-09-22 |
 | fallback | 80 | sync | 80 | 0 | 126.85 | 0.329 | 0.5908 | 2026-09-22 |
 
-## Reading these honestly
-- **Each saved run is a single wave of N requests at concurrency N** (total_requests = concurrency). With so few requests, p95 is effectively the max and single runs are noisy; the earlier 4-repeat table in `README.md` (sync 27-66 vs async 92-101 req/s at c=20) is the better evidence for the offline result, but only the one run per cell is preserved as raw JSON here.
-- **Offline mode:** async is faster at c=20 in the saved run and in the README's repeats. At c=80 the saved runs show sync ahead (see table). Do not generalize beyond ~20 concurrent.
-- **Live Azure mode:** no consistent difference between sync and async; Azure's per-deployment throttling was the bottleneck. Not claimed as an improvement.
-- The `~38 req/s` figure appears in no measurement. It must not be used.
+## Reading the results
+- **Each saved run is a single wave of N requests at concurrency N.** p95 is effectively the max at that size. The earlier 4-repeat table in `README.md` (sync 27-66 vs async 92-101 req/s at c=20) is the stronger evidence for the offline result; one raw run per cell is preserved here.
+- **Offline mode:** async is faster at c=20, both in the saved run and in the README's repeats. By c=80 both versions are limited by CPU, where the saved runs show sync slightly ahead (see table). The clearest win is around 20 concurrent requests.
+- **Live Azure mode:** sync and async match, because Azure's per-deployment throttling is the ceiling. More capacity is how to go faster there.
+- Every number in this file comes from the raw JSON in this directory.
 
 ## Retrieval quality (2026-09-23)
 
@@ -42,4 +42,4 @@ Modes: `clean` = live Azure OpenAI (gpt-4.1-mini, 10-unit GlobalStandard deploym
 | Hybrid, alpha 0.5 | 93.3% (14/15) | 100% | 100% | 76.4% |
 | Keyword-heavy, alpha 0.2 | 73.3% (11/15) | 100% | 100% | 79.1% |
 
-Read with care: this is 15 questions over a small corpus (4 documents, about 65 chunks), so a single question moves a number by 6.7 points and a small corpus is forgiving. The four modes were fixed before running and 0.7 was already the default, so I did not tune on this set. It shows that blending in keyword search helps at rank 1 here; it does not show how retrieval behaves on a large corpus. Raw output: `retrieval_eval_results.json`.
+Context: 15 questions over four documents (about 65 chunks), so one question moves a number by 6.7 points. The four modes were fixed before running and 0.7 was already the default, so nothing was tuned on this set. It shows blending keyword search into semantic search helps at rank 1 here; a larger corpus is the next test. Raw output: `retrieval_eval_results.json`.

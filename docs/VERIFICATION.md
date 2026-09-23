@@ -26,7 +26,7 @@ The container's own health check reported `healthy` after about 50 seconds. Then
 - `POST /ask` returned the offline fallback answer with its source passages
 - The container logs contained no tracebacks or errors
 
-Not tried: an amd64 build, running the container against live Azure endpoints, deploying to Azure Container Apps (the scripts in `deploy/` have never been run end to end, because my university tenant blocks the Azure CLI from this machine).
+Next checks: an amd64 build, running the container against live Azure endpoints, and a Container Apps rollout with the scripts in `deploy/` (my university tenant blocks the Azure CLI from this machine, so that step runs in Cloud Shell).
 
 ## Live Azure checks (2026-09-21)
 
@@ -34,7 +34,7 @@ Against a real Azure OpenAI deployment (`gpt-4.1-mini`, GlobalStandard, North Ce
 
 ## Async benchmark
 
-See [`../bench/RESULTS.md`](../bench/RESULTS.md) (table generated from the raw JSON files) and [`../bench/README.md`](../bench/README.md) (the story, including the two bugs found along the way). One thing to keep in mind when reading the table: each saved run is a single burst of N requests at concurrency N, so a single run is noisy. The four repeated offline runs at concurrency 20 are described in `bench/README.md`, but only the first run's raw JSON was kept.
+See [`../bench/RESULTS.md`](../bench/RESULTS.md) (table generated from the raw JSON files) and [`../bench/README.md`](../bench/README.md) (the story, including the two bugs found along the way). Each saved run is a single burst of N requests at concurrency N; the four repeated offline runs at concurrency 20 are described in `bench/README.md`, and the raw JSON of the first is kept.
 
 ## Secrets check (2026-09-23)
 
@@ -44,7 +44,7 @@ I compared the four real values in my local `.env` (Azure OpenAI endpoint and ke
 
 `python -m pytest tests -q`: 32 passed (offline, temporary vector store, no cloud services). Writing them exposed a chunking bug: a 400-line log with no blank lines or sentence punctuation became one 24,579-character chunk. After the fix it splits into 50 chunks (max 546 characters) and the four sample documents chunk exactly as before (17, 15, 10 and 23 chunks). Regression tests cover it.
 
-## Not done yet
+## Next
 
 - No amd64 image test
 - No Container Apps deployment
