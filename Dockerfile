@@ -12,11 +12,8 @@
 # outbound network access to Hugging Face at runtime -- only to whichever
 # LLM / Content Safety endpoints are configured, if any.
 #
-# NOTE: this Dockerfile has not been built or run in the environment that
-# wrote it (no Docker daemon available there) -- it hasn't been verified
-# end-to-end. Build it yourself with `docker build -t rag-assistant .`
-# and report back if anything's wrong; see README "Deployment" for the
-# exact verification steps this still needs.
+# Verified: a build from a clean git clone succeeded and the container served /health, /ingest,
+# /search and /ask (Apple silicon, docker 29.8.0). Not verified: amd64, Azure Container Apps.
 FROM python:3.11-slim
 
 WORKDIR /app
