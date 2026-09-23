@@ -6,28 +6,50 @@ Built to match the AI-103 (Azure AI Apps and Agents Developer Associate) syllabu
 
 ---
 
-## Problem statement
+## Why I built this
 
-Engineers troubleshooting equipment lose time searching manuals, logs and notes. This project answers questions from those documents with sources attached, and refuses to invent an answer when the documents don't contain one. The goals: grounded answers, an agent that chooses between tools instead of always searching, safety checks with an honest account of what they can and can't catch, and measured (not assumed) performance.
+If you have ever worked around industrial equipment, you know the routine. Something throws a fault code, and somebody digs through a PDF manual, a folder of service notes and a log file to work out what it means. This project is my attempt at making that faster: you upload the documents, ask a question in plain English, and get an answer with the exact passages it came from. If the documents don't say, it tells you that instead of guessing.
 
-## Results (all measured; details in [`bench/RESULTS.md`](bench/RESULTS.md) and [`bench/README.md`](bench/README.md))
+I started with a plain FastAPI and ChromaDB search service, then grew it into something closer to what a team would actually run: Azure OpenAI for the answers, an agent that decides which tool to use, safety checks, Docker, and deployment scripts. Along the way I measured what I built, and some of the results were not what I hoped for. Those are written down below too.
 
-| Question | Result |
+## What's in the box (tech stack)
+
+| Layer | What I used |
 |---|---|
-| Does the agent make real, different tool decisions? | Yes. 4 live queries gave 4 different behaviours (search, status check, clarifying question, refusal to invent). |
-| Do Azure OpenAI and Content Safety work live? | Yes, verified against real `gpt-4.1-mini` and Content Safety (F0) endpoints on 2026-09-21. |
-| Does making `/ask` async help? | **Offline (retrieval-only) mode: yes.** At 20 concurrent requests, throughput was 27-66 req/s sync vs 92-101 req/s async across 4 runs (Apple M4); the saved raw run is 27.3 vs 97.5. **Live Azure mode: no measurable gain**, because Azure's own rate limits were the bottleneck. |
-| Which endpoints are async? | Only `/ask` (LLM + Content Safety calls) was converted; `/agent` was already async. `/search`, `/ingest` and the evaluation routes are still synchronous. |
-| Does the Docker image build and run from a clean clone? | Yes: built from a fresh `git clone`; the container reported healthy and `/health`, `/ingest`, `/search`, `/ask` worked. Apple silicon only; amd64 and Azure Container Apps deployment were not tested. |
-| Known weaknesses | The groundedness check is a word-overlap heuristic with known false positives; a retrieval miss on one test query is documented below. |
+| API | Python 3.11, FastAPI, Uvicorn, Pydantic v2 |
+| Retrieval | ChromaDB (vector store), sentence-transformers `all-MiniLM-L6-v2` embeddings, `rank-bm25` for keyword search, hybrid blending of the two |
+| Document loading | `pypdf` for PDFs, plus plain text, Markdown and logs |
+| Answers | Azure OpenAI (`gpt-4.1-mini` deployment), plain OpenAI as a fallback, and an offline mode that returns the retrieved passages when no model is configured |
+| Agent | Semantic Kernel with real function calling (search documents, check equipment status, ask a clarifying question) |
+| Safety | Azure AI Content Safety on inputs and outputs, plus a word-overlap groundedness check |
+| Telemetry | OpenTelemetry through Azure Monitor / Application Insights |
+| Frontend | React 18, TypeScript, Vite 5, Tailwind CSS 3, React Query |
+| Packaging | Docker (`python:3.11-slim`, embedding model baked into the image), Azure Container Apps scripts in `deploy/` |
 
-## How we got here
+## What I measured
 
-1. Started from a working FastAPI + ChromaDB RAG service with a React frontend (the earlier commits).
-2. Added Azure OpenAI alongside the offline fallback, then a Semantic Kernel agent with real function calling, then Content Safety and groundedness checks, then Docker and Azure deployment scripts (Phases 1-5 in the commit history).
-3. Ran everything against live Azure resources and wrote down what failed (see "What's verified and what isn't").
-4. Found that the service was not actually async, so converted `/ask`, then benchmarked it. That surfaced two real bugs (an embedding-model thread-safety crash, and Content Safety's free-tier rate limit confounding the first benchmark), both fixed and both documented in `bench/README.md`.
-5. Audited the claims: built the Docker image from a clean clone and ran it, and re-derived the benchmark table from raw JSON.
+Everything here was run on my own laptop (Apple M4, 10 cores, 16 GB). The raw numbers and the scripts are in [`bench/`](bench/), and the day-by-day checks are in [`docs/VERIFICATION.md`](docs/VERIFICATION.md).
+
+| Question | What happened |
+|---|---|
+| Does the agent make real decisions? | Yes. I ran four live queries and got four different behaviours: a document search, an equipment status check, a clarifying question, and a refusal to make something up. |
+| Do the Azure services work live? | Yes. Azure OpenAI (`gpt-4.1-mini`) and Content Safety (free F0 tier) both answered real requests on 2026-09-21. |
+| Did making `/ask` async help? | In offline mode, yes. At 20 concurrent requests the old synchronous version handled 27 to 66 requests per second across four runs, and the async version handled 92 to 101. Against the live Azure deployment I saw no reliable difference, because Azure's own rate limiting was the bottleneck. |
+| Which endpoints are async? | `/ask` (I converted it) and `/agent` (it already was). `/search`, `/ingest` and the evaluation routes are still regular synchronous endpoints. |
+| Does the Docker image work? | Yes. I cloned the repo fresh, built the image, started the container, and it reported healthy. `/health`, `/ingest`, `/search` and `/ask` all responded. I only tried this on Apple silicon. |
+| Are there automated tests? | No pytest suite yet. I checked behaviour with live runs and the load tests in `bench/`. Adding real tests is at the top of my list. |
+
+Two things I would rather you hear from me: the groundedness check is a simple word-overlap heuristic and it flags some correct answers as ungrounded, and on one test question the search missed the passage that explained the fault code (the agent said so instead of inventing an answer).
+
+## How it came together
+
+1. **A working base.** FastAPI, ChromaDB and a React frontend, with prompt templates and experiment tracking.
+2. **Azure OpenAI.** Added next to the offline fallback, so the app still works with no cloud at all.
+3. **The agent and the safety layer.** A Semantic Kernel agent with real tool calls, then Content Safety and the groundedness check.
+4. **Docker and deployment scripts.** The image, telemetry, and Azure Container Apps scripts.
+5. **Running it for real.** I pointed everything at live Azure resources and wrote down what broke. The groundedness check was scoring correct answers too low because it compared them to a shortened excerpt, which I fixed.
+6. **Noticing it wasn't async.** I had described the service as async, but the endpoints were plain functions. I converted `/ask`, then benchmarked it. That turned up two real bugs: the embedding model crashed the whole process when several requests used it at once (fixed with a lock), and my first benchmark was being skewed by the free Content Safety tier rate-limiting me (fixed by isolating the variable). The full story is in [`bench/README.md`](bench/README.md).
+7. **Checking my own claims.** I rebuilt the Docker image from a clean clone and regenerated the benchmark table from the raw JSON files.
 
 ---
 
