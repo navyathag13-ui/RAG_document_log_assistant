@@ -12,6 +12,7 @@ Built to match the AI-103 (Azure AI Apps and Agents Developer Associate) syllabu
 - An **Azure OpenAI** powered assistant and a **Semantic Kernel agent** that chooses between tools, both run live against real Azure resources
 - **Azure AI Content Safety** screening plus a groundedness check on answers
 - Still fully usable **offline** with no cloud services at all
+- Measured retrieval quality: the right source document at rank 1 for 93.3% of benchmark questions with hybrid search
 - An async `/ask` endpoint, benchmarked (roughly 2 to 3 times the throughput offline at 20 concurrent requests)
 - A Docker image that builds from a clean clone and serves the API, plus Azure Container Apps deployment scripts and OpenTelemetry monitoring
 
@@ -45,6 +46,7 @@ Everything here was run on my own laptop (Apple M4, 10 cores, 16 GB). The raw nu
 | Does the agent make real decisions? | Yes. I ran four live queries and got four different behaviours: a document search, an equipment status check, a clarifying question, and a refusal to make something up. |
 | Do the Azure services work live? | Yes. Azure OpenAI (`gpt-4.1-mini`) and Content Safety (free F0 tier) both answered real requests on 2026-09-21. |
 | Did making `/ask` async help? | In offline mode, yes. At 20 concurrent requests the old synchronous version handled 27 to 66 requests per second across four runs, and the async version handled 92 to 101. Against the live Azure deployment I saw no reliable difference, because Azure's own rate limiting was the bottleneck. |
+| How good is retrieval? | On the 15 built-in questions over the sample documents, the right document is ranked first 86.7% of the time with semantic search alone and 93.3% with the default hybrid search (semantic plus keyword), and it is in the top 3 every time. Small set, small corpus: see [`bench/RESULTS.md`](bench/RESULTS.md). |
 | Which endpoints are async? | `/ask` (I converted it) and `/agent` (it already was). `/search`, `/ingest` and the evaluation routes are still regular synchronous endpoints. |
 | Does the Docker image work? | Yes. I cloned the repo fresh, built the image, started the container, and it reported healthy. `/health`, `/ingest`, `/search` and `/ask` all responded. I only tried this on Apple silicon. |
 | Are there automated tests? | Yes: 32 pytest tests (text splitting, file loading, safety and groundedness checks, answer scoring, and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |

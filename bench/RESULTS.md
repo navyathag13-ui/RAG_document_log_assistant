@@ -30,3 +30,16 @@ Modes: `clean` = live Azure OpenAI (gpt-4.1-mini, 10-unit GlobalStandard deploym
 - **Offline mode:** async is faster at c=20 in the saved run and in the README's repeats. At c=80 the saved runs show sync ahead (see table). Do not generalize beyond ~20 concurrent.
 - **Live Azure mode:** no consistent difference between sync and async; Azure's per-deployment throttling was the bottleneck. Not claimed as an improvement.
 - The `~38 req/s` figure appears in no measurement. It must not be used.
+
+## Retrieval quality (2026-09-23)
+
+`python bench/retrieval_eval.py` ingests the four sample documents into a temporary store and scores the 15 built-in benchmark questions (`tests/benchmark_questions.json`). Each question names the document that should answer it and keywords a good passage should contain.
+
+| Mode | Correct document at rank 1 | in top 3 | in top 5 | Expected keywords found in top-3 text |
+|---|---|---|---|---|
+| Semantic only | 86.7% (13/15) | 100% | 100% | 71.3% |
+| Hybrid, alpha 0.7 (the app's default) | 93.3% (14/15) | 100% | 100% | 78.9% |
+| Hybrid, alpha 0.5 | 93.3% (14/15) | 100% | 100% | 76.4% |
+| Keyword-heavy, alpha 0.2 | 73.3% (11/15) | 100% | 100% | 79.1% |
+
+Read with care: this is 15 questions over a small corpus (4 documents, about 65 chunks), so a single question moves a number by 6.7 points and a small corpus is forgiving. The four modes were fixed before running and 0.7 was already the default, so I did not tune on this set. It shows that blending in keyword search helps at rank 1 here; it does not show how retrieval behaves on a large corpus. Raw output: `retrieval_eval_results.json`.
