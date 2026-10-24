@@ -6,7 +6,7 @@ v2 schemas extend the API with prompt management, comparison, evaluation,
 and experiment tracking.
 """
 from typing import Any, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -139,6 +139,39 @@ class GroundednessResult(BaseModel):
     method: str = "word_overlap"
 
 
+class StructuredAnswer(BaseModel):
+    """
+    The schema the LLM must answer in (see app/services/structured_output.py).
+    Validated with context={"allowed_ids": {...}} so a citation the model
+    wasn't shown fails validation instead of reaching the user.
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    answer: str = Field(..., min_length=1)
+    cited_chunk_ids: list[str] = Field(default_factory=list)
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    needs_human_review: bool
+
+    @field_validator("cited_chunk_ids")
+    @classmethod
+    def _citations_must_be_known(cls, ids: list[str], info: ValidationInfo) -> list[str]:
+        allowed = (info.context or {}).get("allowed_ids")
+        if allowed is not None:
+            unknown = [i for i in ids if i not in allowed]
+            if unknown:
+                raise ValueError(f"cites IDs that were not in the provided context: {unknown}")
+        return ids
+
+
+class StructuredMeta(BaseModel):
+    """How the structured answer was obtained."""
+    mode: str = Field(default="llm", description="'llm' or 'offline' (retrieval-only, nothing to validate)")
+    validated: bool = Field(description="True when the model's JSON passed schema + citation validation")
+    attempts: int = Field(description="Model calls made (1 = valid first time, 2 = needed the retry, 0 = offline)")
+    fallback_used: bool = False
+    last_error: Optional[str] = None
+
+
 class AskResponse(BaseModel):
     question: str
     answer: str
@@ -158,6 +191,9 @@ class AskResponse(BaseModel):
     input_safety: Optional[ContentSafetyResult] = None
     output_safety: Optional[ContentSafetyResult] = None
     groundedness_flag: Optional[GroundednessResult] = None
+    # v4: schema-validated output (answer above == structured.answer)
+    structured: Optional[StructuredAnswer] = None
+    structured_meta: Optional[StructuredMeta] = None
 
 
 # ── Delete ────────────────────────────────────────────────────────────────────
@@ -368,3 +404,5 @@ class AgentResponse(BaseModel):
     input_safety: Optional[ContentSafetyResult] = None
     output_safety: Optional[ContentSafetyResult] = None
     groundedness: Optional[GroundednessResult] = None
+    structured: Optional[StructuredAnswer] = None
+    structured_meta: Optional[StructuredMeta] = None

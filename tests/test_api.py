@@ -66,6 +66,8 @@ def test_ask_uses_offline_fallback_with_sources(client, ingested):
     assert body["llm_used"] is False
     assert body["retrieval_count"] >= 1
     assert body["sources"]
+    assert body["structured_meta"]["mode"] == "offline"
+    assert body["structured"]["cited_chunk_ids"] == [s["chunk_id"] for s in body["sources"]]
 
 
 def test_ask_endpoint_is_async():

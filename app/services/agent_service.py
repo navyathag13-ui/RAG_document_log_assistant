@@ -48,8 +48,9 @@ silent degradation.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
-from typing import Annotated, Any
+from typing import Annotated, Any, Optional
 
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
@@ -65,7 +66,8 @@ from semantic_kernel.filters.functions.function_invocation_context import Functi
 from semantic_kernel.functions import kernel_function
 
 from app.core.logging_config import get_logger
-from app.services import llm_service
+from app.models.schemas import StructuredAnswer, StructuredMeta
+from app.services import llm_service, structured_output
 from app.services.retrieval_service import retrieve
 
 logger = get_logger(__name__)
@@ -90,7 +92,16 @@ and do NOT call a tool speculatively. Instead, ask exactly one specific
 clarifying question and stop there.
 
 Never fabricate information beyond what a tool returned. If a tool returns
-nothing useful, say so plainly instead of making something up."""
+nothing useful, say so plainly instead of making something up.
+
+Your final reply must be a JSON object with exactly these fields:
+  answer             - your answer, or your one clarifying question
+  cited_chunk_ids    - the chunk_id values from search_documents results and the
+                       source_id values from check_equipment_status results that
+                       your answer relies on, copied exactly; empty if none
+  confidence         - a number from 0.0 to 1.0 for how well the tool results support the answer
+  needs_human_review - true if the tool results are insufficient, contradictory,
+                       or the answer is safety-critical"""
 
 
 # ── Mock second data source (Phase 2 requirement: a second, non-RAG tool) ────
@@ -145,7 +156,7 @@ class DocumentSearchPlugin:
             return "No relevant passages found in the indexed documents."
 
         lines = [
-            f"[{r.doc_name} | relevance={r.score:.2f}] {r.text[:400]}"
+            f"[chunk_id: {r.chunk_id} | {r.doc_name} | relevance={r.score:.2f}] {r.text[:400]}"
             for r in results
         ]
         return "\n\n".join(lines)
@@ -178,12 +189,13 @@ class EquipmentStatusPlugin:
         if record is None:
             return json.dumps(
                 {
+                    "source_id": f"equipment:{key}",
                     "equipment_id": key,
                     "status": "unknown",
                     "note": "No record for this equipment ID in the mock status system.",
                 }
             )
-        return json.dumps(record)
+        return json.dumps({"source_id": f"equipment:{key}", **record})
 
 
 # ── Result types ─────────────────────────────────────────────────────────────
@@ -203,6 +215,21 @@ class AgentResult:
     llm_used: bool
     llm_provider: str
     tool_calls: list[ToolCallRecord] = field(default_factory=list)
+    structured: Optional[StructuredAnswer] = None
+    structured_meta: Optional[StructuredMeta] = None
+
+
+_CHUNK_ID_RE = re.compile(r"\[chunk_id: (.+?) \|")
+_SOURCE_ID_RE = re.compile(r'"source_id": "([^"]+)"')
+
+
+def citable_ids(trace: list[ToolCallRecord]) -> set[str]:
+    """IDs the model was actually shown by its tool calls this turn — the only valid citations."""
+    ids: set[str] = set()
+    for tc in trace:
+        ids.update(_CHUNK_ID_RE.findall(tc.result_full))
+        ids.update(_SOURCE_ID_RE.findall(tc.result_full))
+    return ids
 
 
 # ── Orchestration ─────────────────────────────────────────────────────────────
@@ -228,6 +255,7 @@ async def run_agent(query: str) -> AgentResult:
             ),
             llm_used=False,
             llm_provider="none",
+            structured_meta=StructuredMeta(mode="offline", validated=False, attempts=0),
         )
 
     kernel = Kernel()
@@ -254,6 +282,7 @@ async def run_agent(query: str) -> AgentResult:
     kernel.add_plugin(EquipmentStatusPlugin(), plugin_name="equipment")
 
     execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto()
+    execution_settings.response_format = structured_output.RESPONSE_FORMAT
 
     trace: list[ToolCallRecord] = []
 
@@ -282,23 +311,42 @@ async def run_agent(query: str) -> AgentResult:
     history.add_system_message(_AGENT_SYSTEM_PROMPT)
     history.add_user_message(query)
 
-    try:
+    async def call(feedback):
+        # Semantic Kernel appends the tool-call messages to `history` as it
+        # goes, so a retry sees the same tool results the first attempt did.
+        if feedback:
+            history.add_user_message(feedback)
         result = await chat_service.get_chat_message_content(
             chat_history=history,
             settings=execution_settings,
             kernel=kernel,
         )
-        answer = str(result) if result is not None else ""
+        raw = str(result) if result is not None else ""
+        history.add_assistant_message(raw)
+        return raw
+
+    async def call_and_collect_ids(feedback):
+        raw = await call(feedback)
+        allowed.clear()
+        allowed.update(citable_ids(trace))
+        return raw
+
+    allowed: set[str] = set()
+
+    try:
+        structured, meta = await structured_output.generate_async(call_and_collect_ids, allowed)
         logger.info(
-            "Agent turn complete via %s: %d tool call(s), answer %d chars.",
-            resolved.provider, len(trace), len(answer),
+            "Agent turn complete via %s: %d tool call(s), answer %d chars, validated=%s, attempts=%d.",
+            resolved.provider, len(trace), len(structured.answer), meta.validated, meta.attempts,
         )
         return AgentResult(
             query=query,
-            answer=answer,
+            answer=structured.answer,
             llm_used=True,
             llm_provider=resolved.provider,
             tool_calls=trace,
+            structured=structured,
+            structured_meta=meta,
         )
     except Exception as exc:
         logger.warning("Agent LLM call via %s failed: %s", resolved.provider, exc)

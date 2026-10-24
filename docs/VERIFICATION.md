@@ -44,6 +44,26 @@ I compared the four real values in my local `.env` (Azure OpenAI endpoint and ke
 
 `python -m pytest tests -q`: 32 passed (offline, temporary vector store, no cloud services). Writing them exposed a chunking bug: a 400-line log with no blank lines or sentence punctuation became one 24,579-character chunk. After the fix it splits into 50 chunks (max 546 characters) and the four sample documents chunk exactly as before (17, 15, 10 and 23 chunks). Regression tests cover it.
 
+## Structured output and MCP server (2026-10-24)
+
+**Tests.** `python -m pytest tests -q`: 50 passed in 53 seconds (offline, no cloud services). That is the earlier 32 plus 18 new ones: 17 in `tests/test_structured_output.py` (a valid reply, 7 kinds of invalid reply, invalid-then-valid recovered by the retry, invalid twice ending in the flagged fallback, the async path, `qa_service` sending the `json_schema` response format to a scripted client and the agent collecting citable IDs from its tool results) and 1 in `tests/test_mcp_server.py` (an MCP client session lists both tools and calls each). The existing `/ask` offline test now also checks the structured fields.
+
+**Live validation rate.** `python bench/structured_output_eval.py` against the Azure OpenAI `gpt-4.1-mini` deployment, the 15 benchmark questions and the four sample documents in a temporary vector store. Raw output: [`../bench/structured_output_results.json`](../bench/structured_output_results.json).
+
+| Path | Valid on first attempt | Valid after retry | Fallback | Answers with citations | Flagged for review | Median confidence | Median time |
+|---|---|---|---|---|---|---|---|
+| `/ask` (`qa_service`) | 15 / 15 | 0 | 0 | 15 / 15 | 0 | 1.0 | 1.67 s |
+| `/agent` (Semantic Kernel) | 15 / 15 | 0 | 0 | 14 / 15 | 0 | 1.0 | 12.24 s |
+
+- On `/ask`, every answer cited at least one chunk from the question's expected document.
+- On `/agent` the model made 21 tool calls across the 15 questions; the one answer without citations (bq_015) made no tool call.
+- The retry and fallback never ran live, because nothing failed validation. They are covered by the scripted tests above.
+- Self-reported confidence was 1.0 on all 15 `/ask` answers (agent answers ranged 0.0 to 1.0), so it isn't a useful quality signal on its own yet.
+
+**Through the HTTP API.** One live `POST /ask` and one live `POST /agent` through FastAPI's test client with Content Safety on. `/ask` returned a validated answer citing one chunk on the first attempt. For "Is SCU-400 showing any faults, and what does that fault code mean?" the agent called `check_equipment_status` and `search_documents`, cited `equipment:SCU-400` plus three document chunks, set confidence 0.6 and `needs_human_review: true`, and said the retrieved passages didn't define FAULT-T02. Its groundedness check flagged the answer (overlap 0.26, threshold 0.30).
+
+**MCP over stdio.** `python bench/mcp_stdio_check.py` started `python -m app.mcp_server` as a subprocess and talked to it with the official `mcp` Python client (SDK 1.30.0, protocol version 2025-11-25): it listed `search_documents` and `check_equipment_status`, `check_equipment_status("PUMP-01")` returned the mock record with status `warning` and `search_documents` returned passages from `manual.txt`. Not yet tried with a desktop MCP client such as Claude Desktop.
+
 ## Next
 
 - No amd64 image test

@@ -65,4 +65,6 @@ async def run_agent(body: AgentQuery):
         input_safety=input_safety,
         output_safety=output_safety,
         groundedness=groundedness,
+        structured=result.structured,
+        structured_meta=result.structured_meta,
     )

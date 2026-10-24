@@ -11,6 +11,8 @@ Built around the AI-103 (Azure AI Apps and Agents Developer Associate) syllabus.
 - Ask questions of your own manuals and logs and get answers with the exact source passages attached
 - An **Azure OpenAI** powered assistant and a **Semantic Kernel agent** that chooses between tools, both run live against real Azure resources
 - **Azure AI Content Safety** screening plus a groundedness check on answers
+- **Schema-validated answers**: `/ask` and `/agent` return a Pydantic-validated JSON object (answer, cited chunk IDs, confidence, needs-human-review) via Azure OpenAI structured outputs, with a retry and a flagged fallback when validation fails
+- An **MCP server** that exposes the agent's two tools to any MCP client
 - Still fully usable **offline** with no cloud services at all
 - Measured retrieval quality: the right source document at rank 1 for 93.3% of benchmark questions with hybrid search
 - An async `/ask` endpoint, benchmarked (roughly 2 to 3 times the throughput offline at 20 concurrent requests)
@@ -32,6 +34,8 @@ I started with a plain FastAPI and ChromaDB search service, then grew it into so
 | Document loading | `pypdf` for PDFs, plus plain text, Markdown and logs |
 | Answers | Azure OpenAI (`gpt-4.1-mini` deployment), plain OpenAI as a fallback, and an offline mode that returns the retrieved passages when no model is configured |
 | Agent | Semantic Kernel with real function calling (search documents, check equipment status, ask a clarifying question) |
+| Structured output | Azure OpenAI structured outputs (`json_schema`, strict) checked again by a Pydantic model that also rejects citations the model was never shown |
+| Tool protocol | An MCP server (official `mcp` Python SDK, stdio) exposing the same two tools |
 | Safety | Azure AI Content Safety on inputs and outputs, plus a word-overlap groundedness check |
 | Telemetry | OpenTelemetry through Azure Monitor / Application Insights |
 | Frontend | React 18, TypeScript, Vite 5, Tailwind CSS 3, React Query |
@@ -49,11 +53,13 @@ Everything here was run on my own laptop (Apple M4, 10 cores, 16 GB). The raw nu
 | How good is retrieval? | On the 15 built-in questions over the sample documents, the right document is ranked first 86.7% of the time with semantic search alone and 93.3% with the default hybrid search (semantic plus keyword), and it appears in the top 3 every time. Details in [`bench/RESULTS.md`](bench/RESULTS.md). |
 | Where is async used? | `/ask` (the LLM and Content Safety calls are awaited) and `/agent`. The retrieval-heavy endpoints (`/search`, `/ingest`, the evaluation routes) run in FastAPI's threadpool, which suits CPU-bound embedding work. |
 | Does the Docker image work? | Yes. I cloned the repo fresh, built the image, started the container, and it reported healthy. `/health`, `/ingest`, `/search` and `/ask` all responded. Verified on Apple silicon (arm64). |
-| Are there automated tests? | Yes: 32 pytest tests (text splitting, file loading, safety and groundedness checks, answer scoring, and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
+| Does the model's structured output validate? | On the 15 benchmark questions against the live `gpt-4.1-mini` deployment (2026-10-24), 15 of 15 `/ask` answers and 15 of 15 `/agent` answers passed schema and citation validation on the first attempt, so the retry and fallback weren't needed. Every `/ask` answer cited at least one chunk from the expected document. Raw results in [`bench/structured_output_results.json`](bench/structured_output_results.json). |
+| Can an MCP client use the tools? | Yes. A Python MCP client started the server over stdio, listed both tools and called each one ([`bench/mcp_stdio_check.py`](bench/mcp_stdio_check.py)). |
+| Are there automated tests? | Yes: 50 pytest tests (text splitting, file loading, safety and groundedness checks, answer scoring, structured-output validation with its retry and fallback, the MCP server through a real MCP client session and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
 
 While writing the tests I found and fixed a real bug: a long log with no blank lines or sentence punctuation used to become a single 24,579-character chunk. It now splits into 50 chunks under 550 characters, and the sample documents chunk exactly as before.
 
-**Findings I'm tuning next:** the groundedness check is a word-overlap heuristic, so a heavily paraphrased correct answer can score lower than it deserves; and on one test question ("what does WARN-T01 mean") the agent's search didn't surface the explaining passage, so the agent said so instead of guessing. Pointing the agent's search at the hybrid retriever is the natural fix.
+**Findings I'm tuning next:** the model's self-reported confidence was 1.0 on all 15 `/ask` answers, so on its own it doesn't separate strong answers from weak ones; calibrating it against the groundedness and evaluation scores is the next step. The groundedness check is a word-overlap heuristic, so a heavily paraphrased correct answer can score lower than it deserves; and on one test question ("what does WARN-T01 mean") the agent's search didn't surface the explaining passage, so the agent said so instead of guessing. Pointing the agent's search at the hybrid retriever is the natural fix.
 
 ## How it came together
 
@@ -289,7 +295,7 @@ Unchanged from the base project — see inline `/docs` for full request/response
 
 ### `POST /ask`
 
-Grounded QA. Adds three fields on top of the original response: `llm_provider` (which backend actually answered), `input_safety` / `output_safety` (Content Safety results), and `groundedness_flag` (the word-overlap check, separate from the existing continuous `evaluation.groundedness_score`).
+Grounded QA. Adds these fields on top of the original response: `llm_provider` (which backend actually answered), `input_safety` / `output_safety` (Content Safety results), `groundedness_flag` (the word-overlap check, separate from the existing continuous `evaluation.groundedness_score`) and `structured` / `structured_meta` (the schema-validated answer, described below).
 
 ```bash
 curl -X POST http://127.0.0.1:8000/ask \
@@ -349,6 +355,52 @@ With a real LLM configured, the response has this shape (live runs are summarize
   "output_safety": {"checked": true, "flagged": false, "categories": {"Hate": 0, "SelfHarm": 0, "Sexual": 0, "Violence": 0}},
   "groundedness": {"grounded": true, "overlap_ratio": 0.55, "method": "word_overlap"}
 }
+```
+
+### Schema-validated output (`/ask` and `/agent`)
+
+With an LLM configured, both endpoints ask the model for JSON matching a strict schema (`response_format` of type `json_schema`) and validate the reply with the `StructuredAnswer` Pydantic model in [`app/models/schemas.py`](app/models/schemas.py):
+
+| Field | Type | Checked |
+|---|---|---|
+| `answer` | string | must not be empty |
+| `cited_chunk_ids` | list of strings | each ID must be one the model was shown in this request (a retrieved `chunk_id`, or an `equipment:<ID>` source from the status tool) |
+| `confidence` | number | between 0 and 1 |
+| `needs_human_review` | boolean | required |
+
+If the reply isn't valid JSON or fails any check, the model is called once more with the validation error. If that fails too, the endpoint still answers, with `confidence` 0, no citations, `needs_human_review: true` and `structured_meta.fallback_used: true`. In offline mode there's no model output to validate, so `structured_meta.mode` is `"offline"` and the cited IDs are simply the retrieved chunks. The logic is in [`app/services/structured_output.py`](app/services/structured_output.py).
+
+Real `/ask` response fields against the live deployment (2026-10-24):
+```json
+{
+  "llm_provider": "azure_openai",
+  "structured": {
+    "answer": "The maximum operating pressure for the HX-9000 hydraulic system is 350 bar.",
+    "cited_chunk_ids": ["manual_txt_c6448a_chunk_1"],
+    "confidence": 1.0,
+    "needs_human_review": false
+  },
+  "structured_meta": {"mode": "llm", "validated": true, "attempts": 1, "fallback_used": false, "last_error": null}
+}
+```
+
+To measure validation on the benchmark questions (needs an LLM backend in `.env`):
+```bash
+python bench/structured_output_eval.py
+```
+
+### MCP server
+
+[`app/mcp_server.py`](app/mcp_server.py) exposes the agent's two tools, `search_documents` and `check_equipment_status`, over the Model Context Protocol (stdio transport), so an MCP client can call them directly. It uses the same vector store as the API, so documents ingested through `/ingest` are searchable from it. Run it from the repository root:
+
+```bash
+python -m app.mcp_server
+```
+
+To register it with an MCP client, point the client at that command (for example `.venv/bin/python` with arguments `-m app.mcp_server`, started in the repository root). To see a client list and call both tools end to end:
+
+```bash
+python bench/mcp_stdio_check.py
 ```
 
 ### `POST /prompts`, `POST /compare`, `POST /evaluate`, `GET /experiments*`, `GET/POST /benchmark/*`
@@ -486,6 +538,7 @@ Scoping Content Safety to `/ask` and `/agent` but not `/compare` or `/benchmark`
 RAG_document_log_assistant/
 ├── app/
 │   ├── main.py                       # FastAPI app, lifespan, Azure Monitor wiring
+│   ├── mcp_server.py                 # MCP server exposing the agent's two tools (stdio)
 │   ├── api/
 │   │   ├── routes.py                 # v1: ingest, search, ask, documents, health
 │   │   ├── eval_routes.py            # v2: prompts, compare, evaluate, experiments, benchmark
@@ -502,6 +555,7 @@ RAG_document_log_assistant/
 │   │   ├── llm_service.py            # v3: Azure OpenAI / OpenAI / none resolution
 │   │   ├── qa_service.py
 │   │   ├── agent_service.py          # v3: Semantic Kernel agent + tools
+│   │   ├── structured_output.py      # JSON-schema output, validation, retry, fallback
 │   │   ├── safety_service.py         # v3: Content Safety + groundedness
 │   │   ├── evaluation_service.py
 │   │   ├── experiment_service.py
@@ -536,6 +590,7 @@ RAG_document_log_assistant/
 | `pypdf` | PDF text extraction |
 | `openai` | Both plain OpenAI and Azure OpenAI (via `AzureOpenAI` client) |
 | `semantic-kernel` | Agent orchestration, function calling |
+| `mcp` | MCP server for the agent's tools |
 | `azure-ai-contentsafety` | Content Safety screening |
 | `azure-monitor-opentelemetry` | Application Insights telemetry |
 | `pydantic-settings` | Typed configuration from `.env` |

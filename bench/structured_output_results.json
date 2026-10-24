@@ -1,0 +1,443 @@
+{
+  "provider": "azure_openai",
+  "model": "gpt-41-mini",
+  "run_at": "2026-10-24 10:36:28",
+  "ask": {
+    "summary": {
+      "n": 15,
+      "validated_first_attempt": 15,
+      "validated_after_retry": 0,
+      "fallback": 0,
+      "answers_with_citations": 15,
+      "flagged_needs_human_review": 0,
+      "median_confidence": 1.0,
+      "median_seconds": 1.67
+    },
+    "rows": [
+      {
+        "id": "bq_001",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 2,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.82
+      },
+      {
+        "id": "bq_002",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.98
+      },
+      {
+        "id": "bq_003",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 0.96
+      },
+      {
+        "id": "bq_004",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.37
+      },
+      {
+        "id": "bq_005",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.79
+      },
+      {
+        "id": "bq_006",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.28
+      },
+      {
+        "id": "bq_007",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.24
+      },
+      {
+        "id": "bq_008",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 2,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.94
+      },
+      {
+        "id": "bq_009",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 5,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 2.13
+      },
+      {
+        "id": "bq_010",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.64
+      },
+      {
+        "id": "bq_011",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 2,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.64
+      },
+      {
+        "id": "bq_012",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 3,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.31
+      },
+      {
+        "id": "bq_013",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 3.32
+      },
+      {
+        "id": "bq_014",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 1.67
+      },
+      {
+        "id": "bq_015",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 3,
+        "cited_primary_doc": true,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 2.38
+      }
+    ]
+  },
+  "agent": {
+    "summary": {
+      "n": 15,
+      "validated_first_attempt": 15,
+      "validated_after_retry": 0,
+      "fallback": 0,
+      "answers_with_citations": 14,
+      "flagged_needs_human_review": 0,
+      "median_confidence": 1.0,
+      "median_seconds": 12.24
+    },
+    "rows": [
+      {
+        "id": "bq_001",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 3,
+        "cited_primary_doc": null,
+        "confidence": 0.9,
+        "needs_human_review": false,
+        "seconds": 45.3,
+        "tools": [
+          "documents.search_documents",
+          "documents.search_documents",
+          "documents.search_documents",
+          "documents.search_documents",
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_002",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": null,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 18.43,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_003",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": null,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 12.29,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_004",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": null,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 10.58,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_005",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": null,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 11.58,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_006",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": null,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 11.13,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_007",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 2,
+        "cited_primary_doc": null,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 11.09,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_008",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 2,
+        "cited_primary_doc": null,
+        "confidence": 0.9,
+        "needs_human_review": false,
+        "seconds": 12.24,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_009",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 3,
+        "cited_primary_doc": null,
+        "confidence": 0.9,
+        "needs_human_review": false,
+        "seconds": 11.94,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_010",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 2,
+        "cited_primary_doc": null,
+        "confidence": 0.7,
+        "needs_human_review": false,
+        "seconds": 19.36,
+        "tools": [
+          "documents.search_documents",
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_011",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": null,
+        "confidence": 0.9,
+        "needs_human_review": false,
+        "seconds": 15.07,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_012",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 2,
+        "cited_primary_doc": null,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 11.7,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_013",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": null,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 29.1,
+        "tools": [
+          "documents.search_documents",
+          "documents.search_documents",
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_014",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 1,
+        "cited_primary_doc": null,
+        "confidence": 1.0,
+        "needs_human_review": false,
+        "seconds": 15.26,
+        "tools": [
+          "documents.search_documents"
+        ]
+      },
+      {
+        "id": "bq_015",
+        "validated": true,
+        "attempts": 1,
+        "fallback_used": false,
+        "last_error": null,
+        "n_cited": 0,
+        "cited_primary_doc": null,
+        "confidence": 0.0,
+        "needs_human_review": false,
+        "seconds": 7.55,
+        "tools": []
+      }
+    ]
+  }
+}

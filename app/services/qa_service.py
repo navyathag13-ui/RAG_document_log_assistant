@@ -22,7 +22,7 @@ from starlette.concurrency import run_in_threadpool
 from app.core.config import settings
 from app.core.logging_config import get_logger
 from app.models.schemas import AskResponse, EvalScores, SourceChunk
-from app.services import llm_service
+from app.services import llm_service, structured_output
 from app.services.retrieval_service import retrieve
 
 logger = get_logger(__name__)
@@ -72,10 +72,11 @@ def answer_with_template(
     system_prompt, template_name = _resolve_template(template_id)
 
     if llm_service.is_configured():
-        generated, llm_used, provider = _llm_answer(question, chunks, system_prompt)
+        generated, llm_used, provider, structured, meta = _llm_answer(question, chunks, system_prompt)
     else:
         generated, llm_used = _fallback_answer(question, chunks)
         provider = "none"
+        structured, meta = structured_output.offline(generated, chunks)
 
     ask_resp = AskResponse(
         question        = question,
@@ -85,6 +86,8 @@ def answer_with_template(
         retrieval_count = len(chunks),
         sources         = sources,
         template_name   = template_name,
+        structured      = structured,
+        structured_meta = meta,
     )
 
     # Build raw dicts for evaluation service
@@ -176,39 +179,46 @@ def answer(
 
 # ── LLM answer ────────────────────────────────────────────────────────────────
 
-def _llm_answer(question: str, chunks, system_prompt: str) -> tuple[str, bool, str]:
+def _llm_answer(question: str, chunks, system_prompt: str):
     """
-    Returns (answer_text, llm_used, provider). provider is "azure_openai" or
-    "openai" on success, or "none" if it fell back to retrieval-only —
-    either because no client is configured or because the call failed.
+    Returns (answer_text, llm_used, provider, structured, structured_meta).
+    provider is "azure_openai" or "openai" on success, or "none" if it fell
+    back to retrieval-only — either because no client is configured or
+    because the call failed. The answer is requested as schema-validated JSON
+    (see structured_output.py); answer_text is its `answer` field.
     """
     client, model, provider = llm_service.get_chat_client()
     if client is None:
         logger.warning("No LLM client configured; falling back to retrieval-only mode.")
         text, used = _fallback_answer(question, chunks)
-        return text, used, "none"
+        return (text, used, "none", *structured_output.offline(text, chunks))
 
-    context      = _build_context(chunks)
-    user_message = f"Context:\n{context}\n\nQuestion: {question}"
+    messages, allowed_ids = _build_messages(question, chunks, system_prompt)
+
+    def call(feedback):
+        if feedback:
+            messages.append({"role": "user", "content": feedback})
+        response = client.chat.completions.create(
+            model           = model,
+            messages        = messages,
+            temperature     = 0.1,
+            max_tokens      = 800,
+            response_format = structured_output.RESPONSE_FORMAT,
+        )
+        raw = response.choices[0].message.content or ""
+        messages.append({"role": "assistant", "content": raw})
+        return raw
 
     try:
-        response = client.chat.completions.create(
-            model    = model,
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_message},
-            ],
-            temperature = 0.1,
-            max_tokens  = 600,
-        )
-        answer_text = response.choices[0].message.content.strip()
-        logger.info("LLM answer generated via %s (%d chars).", provider, len(answer_text))
-        return answer_text, True, provider
+        structured, meta = structured_output.generate(call, allowed_ids)
+        logger.info("LLM answer generated via %s (%d chars, validated=%s, attempts=%d).",
+                    provider, len(structured.answer), meta.validated, meta.attempts)
+        return structured.answer, True, provider, structured, meta
 
     except Exception as exc:
         logger.warning("LLM call via %s failed (%s); falling back to retrieval-only mode.", provider, exc)
         text, used = _fallback_answer(question, chunks)
-        return text, used, "none"
+        return (text, used, "none", *structured_output.offline(text, chunks))
 
 
 # ── Fallback answer (no LLM) ─────────────────────────────────────────────────
@@ -261,17 +271,32 @@ def _resolve_template(template_id: Optional[str]) -> tuple[str, Optional[str]]:
     return _DEFAULT_SYSTEM_PROMPT, None
 
 
-def _build_context(chunks) -> str:
-    """Concatenate retrieved chunks into a single context string for the LLM."""
+def _build_context(chunks) -> tuple[str, set[str]]:
+    """
+    Concatenate retrieved chunks into a single context string for the LLM.
+    Returns (context, chunk_ids_included) — only the included IDs are valid
+    citations, since chunks past the budget were never shown to the model.
+    """
     parts: list[str] = []
+    ids: set[str] = set()
     total = 0
     for chunk in chunks:
-        entry  = f"[Source: {chunk.doc_name}]\n{chunk.text}"
+        entry  = f"[chunk_id: {chunk.chunk_id} | Source: {chunk.doc_name}]\n{chunk.text}"
         total += len(entry)
         if total > settings.MAX_CONTEXT_CHARS:
             break
         parts.append(entry)
-    return "\n\n---\n\n".join(parts)
+        ids.add(chunk.chunk_id)
+    return "\n\n---\n\n".join(parts), ids
+
+
+def _build_messages(question: str, chunks, system_prompt: str) -> tuple[list[dict], set[str]]:
+    context, allowed_ids = _build_context(chunks)
+    messages = [
+        {"role": "system", "content": system_prompt + "\n" + structured_output.FORMAT_INSTRUCTIONS},
+        {"role": "user",   "content": f"Context:\n{context}\n\nQuestion: {question}"},
+    ]
+    return messages, allowed_ids
 
 
 # ── Async entry point (used by the async /ask route) ─────────────────────────
@@ -283,32 +308,37 @@ def _build_context(chunks) -> str:
 # block the event loop either. See llm_service.get_async_chat_client()'s
 # docstring for the measured reason this exists.
 
-async def _llm_answer_async(question: str, chunks, system_prompt: str) -> tuple[str, bool, str]:
+async def _llm_answer_async(question: str, chunks, system_prompt: str):
     client, model, provider = llm_service.get_async_chat_client()
     if client is None:
         text, used = _fallback_answer(question, chunks)
-        return text, used, "none"
+        return (text, used, "none", *structured_output.offline(text, chunks))
 
-    context      = _build_context(chunks)
-    user_message = f"Context:\n{context}\n\nQuestion: {question}"
+    messages, allowed_ids = _build_messages(question, chunks, system_prompt)
+
+    async def call(feedback):
+        if feedback:
+            messages.append({"role": "user", "content": feedback})
+        response = await client.chat.completions.create(
+            model           = model,
+            messages        = messages,
+            temperature     = 0.1,
+            max_tokens      = 800,
+            response_format = structured_output.RESPONSE_FORMAT,
+        )
+        raw = response.choices[0].message.content or ""
+        messages.append({"role": "assistant", "content": raw})
+        return raw
 
     try:
-        response = await client.chat.completions.create(
-            model    = model,
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_message},
-            ],
-            temperature = 0.1,
-            max_tokens  = 600,
-        )
-        answer_text = response.choices[0].message.content.strip()
-        logger.info("LLM answer generated via %s (async, %d chars).", provider, len(answer_text))
-        return answer_text, True, provider
+        structured, meta = await structured_output.generate_async(call, allowed_ids)
+        logger.info("LLM answer generated via %s (async, %d chars, validated=%s, attempts=%d).",
+                    provider, len(structured.answer), meta.validated, meta.attempts)
+        return structured.answer, True, provider, structured, meta
     except Exception as exc:
         logger.warning("Async LLM call via %s failed (%s); falling back to retrieval-only mode.", provider, exc)
         text, used = _fallback_answer(question, chunks)
-        return text, used, "none"
+        return (text, used, "none", *structured_output.offline(text, chunks))
 
 
 async def answer_async(
@@ -334,10 +364,11 @@ async def answer_async(
     system_prompt, template_name = _resolve_template(template_id)
 
     if llm_service.is_configured():
-        generated, llm_used, provider = await _llm_answer_async(question, chunks, system_prompt)
+        generated, llm_used, provider, structured, meta = await _llm_answer_async(question, chunks, system_prompt)
     else:
         generated, llm_used = _fallback_answer(question, chunks)
         provider = "none"
+        structured, meta = structured_output.offline(generated, chunks)
 
     ask_resp = AskResponse(
         question        = question,
@@ -347,6 +378,8 @@ async def answer_async(
         retrieval_count = len(chunks),
         sources         = sources,
         template_name   = template_name,
+        structured      = structured,
+        structured_meta = meta,
     )
 
     raw_chunks = [

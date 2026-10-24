@@ -22,3 +22,6 @@ azure-core>=1.29.0
 
 # Azure Monitor / Application Insights telemetry (Phase 4)
 azure-monitor-opentelemetry>=1.6.0
+
+# MCP server exposing the agent tools (app/mcp_server.py)
+mcp>=1.2.0
