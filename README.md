@@ -13,6 +13,7 @@ Built around the AI-103 (Azure AI Apps and Agents Developer Associate) syllabus.
 - **Azure AI Content Safety** screening plus a groundedness check on answers
 - **Schema-validated answers**: `/ask` and `/agent` return a Pydantic-validated JSON object (answer, cited chunk IDs, confidence, needs-human-review) via Azure OpenAI structured outputs, with a retry and a flagged fallback when validation fails
 - An **MCP server** that exposes the agent's two tools to any MCP client
+- A **Gradio demo UI** (Ask, Agent and Documents tabs) that calls the same API endpoints, so demos go through the same validation and safety checks
 - Still fully usable **offline** with no cloud services at all
 - Measured retrieval quality: the right source document at rank 1 for 93.3% of benchmark questions with hybrid search
 - An async `/ask` endpoint, benchmarked (roughly 2 to 3 times the throughput offline at 20 concurrent requests)
@@ -55,7 +56,7 @@ Everything here was run on my own laptop (Apple M4, 10 cores, 16 GB). The raw nu
 | Does the Docker image work? | Yes. I cloned the repo fresh, built the image, started the container, and it reported healthy. `/health`, `/ingest`, `/search` and `/ask` all responded. Verified on Apple silicon (arm64). |
 | Does the model's structured output validate? | On the 15 benchmark questions against the live `gpt-4.1-mini` deployment (2026-10-24), 15 of 15 `/ask` answers and 15 of 15 `/agent` answers passed schema and citation validation on the first attempt, so the retry and fallback weren't needed. Every `/ask` answer cited at least one chunk from the expected document. Raw results in [`bench/structured_output_results.json`](bench/structured_output_results.json). |
 | Can an MCP client use the tools? | Yes. A Python MCP client started the server over stdio, listed both tools and called each one ([`bench/mcp_stdio_check.py`](bench/mcp_stdio_check.py)). |
-| Are there automated tests? | Yes: 50 pytest tests (text splitting, file loading, safety and groundedness checks, answer scoring, structured-output validation with its retry and fallback, the MCP server through a real MCP client session and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
+| Are there automated tests? | Yes: 58 pytest tests (text splitting, file loading, safety and groundedness checks, answer scoring, structured-output validation with its retry and fallback, the MCP server through a real MCP client session, the Gradio UI handlers and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
 
 While writing the tests I found and fixed a real bug: a long log with no blank lines or sentence punctuation used to become a single 24,579-character chunk. It now splits into 50 chunks under 550 characters, and the sample documents chunk exactly as before.
 
@@ -218,6 +219,16 @@ for f in data/sample_docs/*; do
 done
 curl -s http://127.0.0.1:8000/health | python3 -m json.tool
 ```
+
+### Gradio demo UI
+
+With the API running, start the UI in a second terminal and open http://127.0.0.1:7860:
+
+```bash
+python -m app.ui.gradio_app --api http://127.0.0.1:8000
+```
+
+It has three tabs: **Ask** (answer, which backend answered, and the source passages with scores), **Agent** (the answer plus every tool call as an audit trace) and **Documents** (upload a file and see what is indexed). It is a thin client over the HTTP API, so it never skips validation, safety screening or tracing.
 
 ---
 
@@ -539,6 +550,7 @@ RAG_document_log_assistant/
 ├── app/
 │   ├── main.py                       # FastAPI app, lifespan, Azure Monitor wiring
 │   ├── mcp_server.py                 # MCP server exposing the agent's two tools (stdio)
+│   ├── ui/gradio_app.py              # Gradio demo UI over the HTTP API (Ask, Agent, Documents)
 │   ├── api/
 │   │   ├── routes.py                 # v1: ingest, search, ask, documents, health
 │   │   ├── eval_routes.py            # v2: prompts, compare, evaluate, experiments, benchmark
