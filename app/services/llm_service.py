@@ -1,19 +1,24 @@
 """
 Provider-agnostic LLM client resolution.
 
-Three possible states, checked in this order:
+Four possible states, checked in this order:
 
   1. Azure OpenAI  — used when AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY,
                       and AZURE_OPENAI_DEPLOYMENT are all set.
-  2. OpenAI         — used when OPENAI_API_KEY is set (and Azure isn't fully
-                      configured). This is the original project's behaviour,
+  2. Amazon Bedrock — used when BEDROCK_API_KEY is set (and Azure isn't fully
+                      configured). Talks to Bedrock's OpenAI-compatible Chat
+                      Completions endpoint for BEDROCK_REGION with a Bedrock
+                      API key, so it is the same `openai` client with a
+                      different base URL.
+  3. OpenAI         — used when OPENAI_API_KEY is set and neither of the above
+                      is configured. This is the original project's behaviour,
                       unchanged.
-  3. None           — no LLM backend configured at all. Callers (qa_service,
+  4. None           — no LLM backend configured at all. Callers (qa_service,
                       agent_service) fall back to their own offline paths;
                       this module never raises for "no LLM configured", it
                       just reports provider="none" so callers can branch on it.
 
-Both real providers are exposed through the same `openai` Python package
+All three real providers are exposed through the same `openai` Python package
 (`OpenAI` and `AzureOpenAI` are both chat-completions-compatible clients),
 so the rest of the app talks to one client interface regardless of which
 cloud backend is behind it. Semantic Kernel's own Azure/OpenAI connectors
@@ -33,11 +38,16 @@ logger = get_logger(__name__)
 
 @dataclass
 class ResolvedLLM:
-    provider: str              # "azure_openai" | "openai" | "none"
+    provider: str              # "azure_openai" | "bedrock" | "openai" | "none"
     model: str                 # Azure deployment name, or OpenAI model name
     endpoint: Optional[str] = None
     api_key: Optional[str] = None
     api_version: Optional[str] = None
+
+
+def bedrock_base_url(region: str) -> str:
+    """Bedrock's OpenAI-compatible Chat Completions base URL for one AWS region."""
+    return f"https://bedrock-runtime.{region}.amazonaws.com/openai/v1"
 
 
 def resolve() -> ResolvedLLM:
@@ -53,6 +63,14 @@ def resolve() -> ResolvedLLM:
             endpoint=settings.AZURE_OPENAI_ENDPOINT,
             api_key=settings.AZURE_OPENAI_API_KEY,
             api_version=settings.AZURE_OPENAI_API_VERSION,
+        )
+
+    if settings.BEDROCK_API_KEY:
+        return ResolvedLLM(
+            provider="bedrock",
+            model=settings.BEDROCK_MODEL,
+            endpoint=bedrock_base_url(settings.BEDROCK_REGION),
+            api_key=settings.BEDROCK_API_KEY,
         )
 
     if settings.OPENAI_API_KEY:
@@ -87,11 +105,11 @@ def get_chat_client():
         )
         return client, resolved.model, "azure_openai"
 
-    if resolved.provider == "openai":
+    if resolved.provider in ("bedrock", "openai"):
         from openai import OpenAI
 
         client = OpenAI(api_key=resolved.api_key, base_url=resolved.endpoint)
-        return client, resolved.model, "openai"
+        return client, resolved.model, resolved.provider
 
     return None, "", "none"
 
@@ -125,10 +143,10 @@ def get_async_chat_client():
         )
         return client, resolved.model, "azure_openai"
 
-    if resolved.provider == "openai":
+    if resolved.provider in ("bedrock", "openai"):
         from openai import AsyncOpenAI
 
         client = AsyncOpenAI(api_key=resolved.api_key, base_url=resolved.endpoint)
-        return client, resolved.model, "openai"
+        return client, resolved.model, resolved.provider
 
     return None, "", "none"

@@ -33,7 +33,7 @@ I started with a plain FastAPI and ChromaDB search service, then grew it into so
 | API | Python 3.11, FastAPI, Uvicorn, Pydantic v2 |
 | Retrieval | ChromaDB (vector store), sentence-transformers `all-MiniLM-L6-v2` embeddings, `rank-bm25` for keyword search, hybrid blending of the two |
 | Document loading | `pypdf` for PDFs, plus plain text, Markdown and logs |
-| Answers | Azure OpenAI (`gpt-4.1-mini` deployment), plain OpenAI as a fallback, and an offline mode that returns the retrieved passages when no model is configured |
+| Answers | Azure OpenAI (`gpt-4.1-mini` deployment), Amazon Bedrock through its OpenAI-compatible endpoint (`BEDROCK_*` settings), plain OpenAI as a fallback, and an offline mode that returns the retrieved passages when no model is configured |
 | Agent | Semantic Kernel with real function calling (search documents, check equipment status, ask a clarifying question) |
 | Structured output | Azure OpenAI structured outputs (`json_schema`, strict) checked again by a Pydantic model that also rejects citations the model was never shown |
 | Tool protocol | An MCP server (official `mcp` Python SDK, stdio) exposing the same two tools |

@@ -247,11 +247,11 @@ async def run_agent(query: str) -> AgentResult:
         return AgentResult(
             query=query,
             answer=(
-                "Agent orchestration needs a configured LLM backend (Azure OpenAI "
-                "or OpenAI) to decide which tool to call — there is no model "
+                "Agent orchestration needs a configured LLM backend (Azure OpenAI, "
+                "Amazon Bedrock or OpenAI) to decide which tool to call — there is no model "
                 "available right now to make that decision, and this project does "
-                "not fake agentic behavior without one. Configure AZURE_OPENAI_* "
-                "or OPENAI_API_KEY in .env, or use POST /ask for retrieval-only mode."
+                "not fake agentic behavior without one. Configure AZURE_OPENAI_*, "
+                "BEDROCK_API_KEY or OPENAI_API_KEY in .env, or use POST /ask for retrieval-only mode."
             ),
             llm_used=False,
             llm_provider="none",
@@ -269,6 +269,17 @@ async def run_agent(query: str) -> AgentResult:
             api_version=resolved.api_version,
         )
         execution_settings = AzureChatPromptExecutionSettings(service_id="agent")
+    elif resolved.provider == "bedrock":
+        # Bedrock's OpenAI-compatible endpoint: hand Semantic Kernel an
+        # AsyncOpenAI client pointed at the Bedrock base URL.
+        from openai import AsyncOpenAI
+
+        chat_service = OpenAIChatCompletion(
+            service_id="agent",
+            ai_model_id=resolved.model,
+            async_client=AsyncOpenAI(api_key=resolved.api_key, base_url=resolved.endpoint),
+        )
+        execution_settings = OpenAIChatPromptExecutionSettings(service_id="agent")
     else:
         chat_service = OpenAIChatCompletion(
             service_id="agent",

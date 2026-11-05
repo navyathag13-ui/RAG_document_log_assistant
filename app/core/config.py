@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # Leave both OpenAI and Azure OpenAI settings blank to run in
     # retrieval-only (no-LLM) mode. See app/services/llm_service.py for the
     # exact resolution order: Azure OpenAI is tried first if fully
-    # configured, then plain OpenAI, then the offline fallback.
+    # configured, then Amazon Bedrock, then plain OpenAI, then the offline fallback.
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-3.5-turbo"
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
@@ -45,6 +45,15 @@ class Settings(BaseSettings):
     AZURE_OPENAI_API_KEY: str = ""
     AZURE_OPENAI_DEPLOYMENT: str = ""     # deployment name, e.g. "gpt-4o-mini"
     AZURE_OPENAI_API_VERSION: str = "2024-10-21"
+
+    # ── Amazon Bedrock (optional) ───────────────────────────────────────────────
+    # Used when BEDROCK_API_KEY is set and Azure OpenAI isn't fully configured.
+    # Calls Bedrock's OpenAI-compatible Chat Completions endpoint
+    # (https://bedrock-runtime.<region>.amazonaws.com/openai/v1) with a Bedrock
+    # API key, so the same `openai` client code serves all three providers.
+    BEDROCK_API_KEY: str = ""
+    BEDROCK_REGION: str = "us-west-2"
+    BEDROCK_MODEL: str = "openai.gpt-oss-20b-1:0"
 
     # ── Azure AI Content Safety (optional) ──────────────────────────────────────
     # Both endpoint and key must be set to enable safety checks on /ask and
