@@ -11,6 +11,7 @@ Built around the AI-103 (Azure AI Apps and Agents Developer Associate) syllabus.
 - Ask questions of your own manuals and logs and get answers with the exact source passages attached
 - An **Azure OpenAI** powered assistant and a **Semantic Kernel agent** that chooses between tools, both run live against real Azure resources
 - **Azure AI Content Safety** screening plus a groundedness check on answers
+- **Document field extraction** (`POST /extract`): pulls equipment ID, date, technician, parts, downtime and status out of a work-order PDF as JSON, checks every value against the document text and flags anything it can't verify for human review
 - **Schema-validated answers**: `/ask` and `/agent` return a Pydantic-validated JSON object (answer, cited chunk IDs, confidence, needs-human-review) via Azure OpenAI structured outputs, with a retry and a flagged fallback when validation fails
 - An **MCP server** that exposes the agent's two tools to any MCP client
 - A **Gradio demo UI** (Ask, Agent and Documents tabs) that calls the same API endpoints, so demos go through the same validation and safety checks
@@ -56,7 +57,8 @@ Everything here was run on my own laptop (Apple M4, 10 cores, 16 GB). The raw nu
 | Does the Docker image work? | Yes. I cloned the repo fresh, built the image, started the container, and it reported healthy. `/health`, `/ingest`, `/search` and `/ask` all responded. Verified on Apple silicon (arm64). |
 | Does the model's structured output validate? | On the 15 benchmark questions against the live `gpt-4.1-mini` deployment (2026-10-24), 15 of 15 `/ask` answers and 15 of 15 `/agent` answers passed schema and citation validation on the first attempt, so the retry and fallback weren't needed. Every `/ask` answer cited at least one chunk from the expected document. Raw results in [`bench/structured_output_results.json`](bench/structured_output_results.json). |
 | Can an MCP client use the tools? | Yes. A Python MCP client started the server over stdio, listed both tools and called each one ([`bench/mcp_stdio_check.py`](bench/mcp_stdio_check.py)). |
-| Are there automated tests? | Yes: 58 pytest tests (text splitting, file loading, safety and groundedness checks, answer scoring, structured-output validation with its retry and fallback, the MCP server through a real MCP client session, the Gradio UI handlers and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
+| Does field extraction work? | Yes, on 20 labeled work-order PDFs I wrote (see [Field extraction](#post-extract-work-order-fields) below). With `gpt-4.1-mini` every field was right on 14 of 14 tuning documents and on 6 of 6 held-out documents written after tuning, with no invented values. |
+| Are there automated tests? | Yes: 74 pytest tests (field extraction and its grounding checks, text splitting, file loading, safety and groundedness checks, answer scoring, structured-output validation with its retry and fallback, the MCP server through a real MCP client session, the Gradio UI handlers and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
 
 While writing the tests I found and fixed a real bug: a long log with no blank lines or sentence punctuation used to become a single 24,579-character chunk. It now splits into 50 chunks under 550 characters, and the sample documents chunk exactly as before.
 
@@ -367,6 +369,45 @@ With a real LLM configured, the response has this shape (live runs are summarize
   "groundedness": {"grounded": true, "overlap_ratio": 0.55, "method": "word_overlap"}
 }
 ```
+
+### `POST /extract` (work-order fields)
+
+Upload a work order or service report (.pdf, .txt, .md, .log) and get its key fields back as validated JSON. The document is not added to the search index.
+
+```json
+{
+  "filename": "wo01_form.pdf",
+  "provider": "azure_openai",
+  "fields": {
+    "equipment_id": "PMP-104", "work_date": "2026-03-03", "technician": "Maria Lopez",
+    "parts": [{"name": "bearings", "quantity": 2}, {"name": "mechanical seal", "quantity": 1}],
+    "downtime_hours": 1.5, "status": "resolved", "needs_human_review": false
+  },
+  "meta": {"mode": "llm", "validated": true, "attempts": 1, "fallback_used": false, "errors": []}
+}
+```
+
+The model fills a strict JSON schema, but a strict schema only guarantees shape, so every value is checked against the document before it is returned ([`app/services/extraction_service.py`](app/services/extraction_service.py)):
+
+- the equipment ID, the technician's name and every part name must appear in the document text
+- the date must be a real `YYYY-MM-DD` date whose year and day appear in the document
+- quantities must be whole numbers from 1 to 1000, downtime 0 to 720 hours, status one of two values
+
+A reply that fails is sent back once with its errors listed. If the retry fails too, every field comes back empty with `needs_human_review: true` and the errors attached. Review is also forced on when the equipment or the date is missing, because a record without them can't be filed.
+
+**How well it works.** [`bench/extraction/make_docs.py`](bench/extraction/make_docs.py) writes 20 short work-order PDFs in different styles (form, email thread, table, invoice, terse shift notes) with their expected fields. Many are traps: a field the document doesn't state (the right answer is null), parts that were only ordered, a second machine that was only inspected, quantities in words, minutes instead of hours, an older job quoted in an email reply. 14 were used to tune the field descriptions; 6 were written afterwards and run once. [`bench/extraction_eval.py`](bench/extraction_eval.py) runs the real pipeline and scores 6 fields per document.
+
+| Model | Documents | Fields right | Documents fully right | Invented values | Replies fixed by the retry |
+|---|---|---|---|---|---|
+| `gpt-4.1-mini`, first field descriptions | 14 tuning | 81/84 (96.4%) | 11/14 | 1 | 0 |
+| `gpt-4.1-mini`, tuned descriptions | 14 tuning | 84/84 (100%) | 14/14 | 0 | 0 |
+| `gpt-4.1-mini`, tuned descriptions | **6 held-out** | **36/36 (100%)** | **6/6** | 0 | 0 |
+| `qwen2.5:7b` (local), first descriptions | 14 tuning | 78/84 (92.9%) | 9/14 | 0 | 8 |
+| `qwen2.5:7b` (local), tuned descriptions | 14 tuning | 78/84 (92.9%), unchanged | 9/14 | 0 | 8 |
+| `qwen2.5:7b` (local), tuned descriptions | 6 held-out | 33/36 (91.7%) | 3/6 | 0 | 4 |
+The first `gpt-4.1-mini` run missed 3 fields: twice it returned the ID with the machine's name attached ("HYD-55 hydraulic press"), and once it read an hour of labor on a job with no equipment as downtime (that document was flagged for review). Tightening the field descriptions fixed all three. On the local 7B model the validation step did real work: 8 first replies wrote the date as "March 3, 2026" instead of `YYYY-MM-DD`, validation rejected all 8 and the retry corrected every one, lifting field accuracy from 84.5% on the first replies to 92.9%. Tuning the descriptions changed nothing for the 7B model, most likely because Ollama uses the schema to constrain the output rather than showing the descriptions to the model. The grounding checks (a value that isn't in the document) never fired in these runs because neither model made a value up; they are covered by unit tests in [`tests/test_extraction.py`](tests/test_extraction.py).
+
+Limits: the review flag catches missing fields, not plausible wrong ones; on the held-out set the 7B model's 3 wrong documents (two downtime values, one status) were not flagged, so a cheaper model needs a person spot-checking. 20 documents is a small set, and I wrote both the documents and the labels. The PDFs are generated text, not scans, so OCR quality isn't tested. Raw results are in `bench/extraction_results_*.json`.
 
 ### Schema-validated output (`/ask` and `/agent`)
 

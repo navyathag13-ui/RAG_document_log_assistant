@@ -1,0 +1,373 @@
+{
+ "summary": {
+  "backend": "ollama",
+  "model": "qwen2.5:7b",
+  "documents": 6,
+  "field_accuracy": "33/36 (91.7%)",
+  "first_reply_field_accuracy": "29/36 (80.6%)",
+  "documents_fully_correct": "3/6",
+  "invented_values_final": 0,
+  "invented_values_first_reply": 0,
+  "valid_first_try": 2,
+  "fixed_by_retry": 4,
+  "fell_back_to_review": 0,
+  "first_replies_rejected_that_had_a_wrong_value": "4/4",
+  "wrong_documents_flagged_for_review": "0/3",
+  "per_field_accuracy": {
+   "equipment_id": "6/6",
+   "work_date": "6/6",
+   "technician": "6/6",
+   "parts": "6/6",
+   "downtime_hours": "4/6",
+   "status": "5/6"
+  },
+  "median_seconds": 21.13,
+  "set": "heldout"
+ },
+ "rows": [
+  {
+   "doc": "h01_invoice.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 26.46,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": false,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": false,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "ACU-17",
+    "work_date": "2026-10-21",
+    "technician": "Rachel Singh",
+    "parts": [
+     {
+      "name": "Compressor contactor",
+      "quantity": 1
+     },
+     {
+      "name": "Pleated filter 20x25",
+      "quantity": 4
+     }
+    ],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": null,
+    "work_date": "Oct. 21, 2026",
+    "technician": "Rachel Singh",
+    "parts": [
+     {
+      "name": "Compressor contactor",
+      "quantity": 1
+     },
+     {
+      "name": "Pleated filter 20x25",
+      "quantity": 4
+     }
+    ],
+    "downtime_hours": 0.8333,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "h02_thread.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 21.13,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": false,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": false,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "FRK-3",
+    "work_date": "2026-09-30",
+    "technician": "Luis Romero",
+    "parts": [
+     {
+      "name": "hydraulic lift chains",
+      "quantity": 2
+     }
+    ],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "FRK-3",
+    "work_date": "September 30, 2026",
+    "technician": "Luis Romero",
+    "parts": [
+     {
+      "name": "hydraulic lift chains",
+      "quantity": 2
+     }
+    ],
+    "downtime_hours": 0.5,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "h03_short_name.pdf",
+   "validated": true,
+   "attempts": 1,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 10.11,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "PRS-9",
+    "work_date": "2026-09-14",
+    "technician": "R. Novak",
+    "parts": [
+     {
+      "name": "brake pads",
+      "quantity": 2
+     }
+    ],
+    "downtime_hours": 0.5,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "PRS-9",
+    "work_date": "2026-09-14",
+    "technician": "R. Novak",
+    "parts": [
+     {
+      "name": "brake pads",
+      "quantity": 2
+     }
+    ],
+    "downtime_hours": 0.5,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "h04_locked_out.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 16.64,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": false
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": false
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "WLD-06",
+    "work_date": "2026-08-19",
+    "technician": "Nina Petrova",
+    "parts": [],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "WLD-06",
+    "work_date": "August 19, 2026",
+    "technician": "Nina Petrova",
+    "parts": [],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "h05_no_tech.pdf",
+   "validated": true,
+   "attempts": 1,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 10.56,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "DRY-2",
+    "work_date": "2026-07-07",
+    "technician": null,
+    "parts": [
+     {
+      "name": "Desiccant cartridge",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 2.0,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "DRY-2",
+    "work_date": "2026-07-07",
+    "technician": null,
+    "parts": [
+     {
+      "name": "Desiccant cartridge",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 2,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "h06_many_parts.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 27.56,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "PKG-14",
+    "work_date": "2026-06-25",
+    "technician": "Kofi Mensah",
+    "parts": [
+     {
+      "name": "suction cups",
+      "quantity": 5
+     },
+     {
+      "name": "proximity sensors",
+      "quantity": 2
+     },
+     {
+      "name": "timing belt",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 4.5,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "PKG-14",
+    "work_date": "June 25, 2026",
+    "technician": "Kofi Mensah",
+    "parts": [
+     {
+      "name": "suction cups",
+      "quantity": 5
+     },
+     {
+      "name": "proximity sensors",
+      "quantity": 2
+     },
+     {
+      "name": "timing belt",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 4.5,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  }
+ ]
+}

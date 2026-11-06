@@ -1,0 +1,194 @@
+{
+ "wo01_form.pdf": {
+  "equipment_id": "PMP-104",
+  "work_date": "2026-03-03",
+  "technician": "Maria Lopez",
+  "parts": [
+   [
+    "bearing",
+    2
+   ],
+   [
+    "seal",
+    1
+   ]
+  ],
+  "downtime_hours": 1.5,
+  "status": "resolved"
+ },
+ "wo02_email.pdf": {
+  "equipment_id": "CMP-210",
+  "work_date": "2026-04-09",
+  "technician": "Dev Patel",
+  "parts": [
+   [
+    "filter",
+    3
+   ]
+  ],
+  "downtime_hours": 0.75,
+  "status": "resolved"
+ },
+ "wo03_table.pdf": {
+  "equipment_id": "CNV-007",
+  "work_date": "2026-02-17",
+  "technician": "Aisha Khan",
+  "parts": [
+   [
+    "belt",
+    1
+   ],
+   [
+    "bearing",
+    4
+   ]
+  ],
+  "downtime_hours": 3,
+  "status": "follow_up_required"
+ },
+ "wo04_no_tech.pdf": {
+  "equipment_id": "GEN-02",
+  "work_date": "2026-05-12",
+  "technician": null,
+  "parts": [
+   [
+    "fuel filter",
+    1
+   ],
+   [
+    "air filter",
+    1
+   ]
+  ],
+  "downtime_hours": 2,
+  "status": "resolved"
+ },
+ "wo05_ordered_only.pdf": {
+  "equipment_id": "HYD-55",
+  "work_date": "2026-01-28",
+  "technician": "Tom Becker",
+  "parts": [
+   [
+    "hose",
+    1
+   ]
+  ],
+  "downtime_hours": 1,
+  "status": "resolved"
+ },
+ "wo06_words.pdf": {
+  "equipment_id": "CH-12",
+  "work_date": "2026-06-02",
+  "technician": "Grace Kim",
+  "parts": [
+   [
+    "belt",
+    3
+   ],
+   [
+    "gasket",
+    2
+   ]
+  ],
+  "downtime_hours": 1.5,
+  "status": "resolved"
+ },
+ "wo07_two_machines.pdf": {
+  "equipment_id": "PMP-221",
+  "work_date": "2026-07-15",
+  "technician": "Omar Haddad",
+  "parts": [
+   [
+    "impeller",
+    1
+   ]
+  ],
+  "downtime_hours": 2.5,
+  "status": "resolved"
+ },
+ "wo08_follow_up.pdf": {
+  "equipment_id": "BLR-01",
+  "work_date": "2026-08-04",
+  "technician": "Lena Fischer",
+  "parts": [
+   [
+    "thermocouple",
+    2
+   ]
+  ],
+  "downtime_hours": 6,
+  "status": "follow_up_required"
+ },
+ "wo09_no_downtime.pdf": {
+  "equipment_id": "FAN-33",
+  "work_date": "2026-09-22",
+  "technician": "Sam Rivera",
+  "parts": [
+   [
+    "capacitor",
+    1
+   ]
+  ],
+  "downtime_hours": null,
+  "status": "resolved"
+ },
+ "wo10_inspection.pdf": {
+  "equipment_id": "CRN-03",
+  "work_date": "2026-10-06",
+  "technician": "Priya Nair",
+  "parts": [],
+  "downtime_hours": 0,
+  "status": "resolved"
+ },
+ "wo11_no_date.pdf": {
+  "equipment_id": "MIX-08",
+  "work_date": null,
+  "technician": "Carlos Mendes",
+  "parts": [
+   [
+    "seal",
+    1
+   ]
+  ],
+  "downtime_hours": 4,
+  "status": "resolved"
+ },
+ "wo12_terse.pdf": {
+  "equipment_id": "TRB-4",
+  "work_date": "2026-11-03",
+  "technician": "J. Okafor",
+  "parts": [
+   [
+    "sensor",
+    2
+   ],
+   [
+    "coupling",
+    1
+   ]
+  ],
+  "downtime_hours": 2,
+  "status": "resolved"
+ },
+ "wo13_no_equipment.pdf": {
+  "equipment_id": null,
+  "work_date": "2026-04-20",
+  "technician": "Hannah Cole",
+  "parts": [
+   [
+    "fixture",
+    6
+   ]
+  ],
+  "downtime_hours": null,
+  "status": "resolved"
+ },
+ "wo14_unresolved_no_parts.pdf": {
+  "equipment_id": "ELV-1",
+  "work_date": "2026-05-30",
+  "technician": "Ben Ortiz",
+  "parts": [],
+  "downtime_hours": 8,
+  "status": "follow_up_required"
+ }
+}

@@ -1,0 +1,87 @@
+{
+ "h01_invoice.pdf": {
+  "equipment_id": "ACU-17",
+  "work_date": "2026-10-21",
+  "technician": "Rachel Singh",
+  "parts": [
+   [
+    "contactor",
+    1
+   ],
+   [
+    "filter",
+    4
+   ]
+  ],
+  "downtime_hours": 0.8333,
+  "status": "resolved"
+ },
+ "h02_thread.pdf": {
+  "equipment_id": "FRK-3",
+  "work_date": "2026-09-30",
+  "technician": "Luis Romero",
+  "parts": [
+   [
+    "chain",
+    2
+   ]
+  ],
+  "downtime_hours": 3,
+  "status": "resolved"
+ },
+ "h03_short_name.pdf": {
+  "equipment_id": "PRS-9",
+  "work_date": "2026-09-14",
+  "technician": "R. Novak",
+  "parts": [
+   [
+    "brake pad",
+    2
+   ]
+  ],
+  "downtime_hours": 0.5,
+  "status": "resolved"
+ },
+ "h04_locked_out.pdf": {
+  "equipment_id": "WLD-06",
+  "work_date": "2026-08-19",
+  "technician": "Nina Petrova",
+  "parts": [],
+  "downtime_hours": null,
+  "status": "follow_up_required"
+ },
+ "h05_no_tech.pdf": {
+  "equipment_id": "DRY-2",
+  "work_date": "2026-07-07",
+  "technician": null,
+  "parts": [
+   [
+    "cartridge",
+    1
+   ]
+  ],
+  "downtime_hours": 2,
+  "status": "resolved"
+ },
+ "h06_many_parts.pdf": {
+  "equipment_id": "PKG-14",
+  "work_date": "2026-06-25",
+  "technician": "Kofi Mensah",
+  "parts": [
+   [
+    "cup",
+    5
+   ],
+   [
+    "sensor",
+    2
+   ],
+   [
+    "belt",
+    1
+   ]
+  ],
+  "downtime_hours": 4.5,
+  "status": "resolved"
+ }
+}

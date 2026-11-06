@@ -23,8 +23,9 @@ from app.models.schemas import (
     SearchQuery,
     SearchResponse,
 )
-from app.services import ingest_service, llm_service, qa_service, retrieval_service, vector_store
-from app.utils.file_loader import SUPPORTED_EXTENSIONS
+from app.services import extraction_service, ingest_service, llm_service, qa_service, retrieval_service, vector_store
+from app.services.extraction_service import ExtractResponse
+from app.utils.file_loader import SUPPORTED_EXTENSIONS, load_file
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -198,6 +199,40 @@ async def ask(body: AskQuery):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
 
     return response
+
+
+
+# ── Extract ───────────────────────────────────────────────────────────────────────
+
+@router.post("/extract", response_model=ExtractResponse, tags=["Extraction"])
+def extract_fields(file: UploadFile = File(...)):
+    """
+    Extract a work order's fields (equipment, date, technician, parts, downtime,
+    status) as validated JSON. Every value is checked against the document text;
+    anything that can't be verified comes back empty with needs_human_review=true.
+    The document is not added to the search index.
+    """
+    filename = file.filename or "upload"
+    ext = Path(filename).suffix.lower()
+    if ext not in SUPPORTED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=f"Unsupported file type '{ext}'. Accepted: {', '.join(sorted(SUPPORTED_EXTENSIONS))}",
+        )
+    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+    try:
+        text, _ = load_file(tmp_path)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+
+    fields, meta, provider = extraction_service.extract(text)
+    return ExtractResponse(filename=filename, provider=provider, fields=fields, meta=meta)
 
 
 

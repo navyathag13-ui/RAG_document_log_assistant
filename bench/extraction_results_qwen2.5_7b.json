@@ -1,0 +1,818 @@
+{
+ "summary": {
+  "backend": "ollama",
+  "model": "qwen2.5:7b",
+  "documents": 14,
+  "field_accuracy": "78/84 (92.9%)",
+  "first_reply_field_accuracy": "71/84 (84.5%)",
+  "documents_fully_correct": "9/14",
+  "invented_values_final": 0,
+  "invented_values_first_reply": 0,
+  "valid_first_try": 6,
+  "fixed_by_retry": 8,
+  "fell_back_to_review": 0,
+  "first_replies_rejected_that_had_a_wrong_value": "8/8",
+  "wrong_documents_flagged_for_review": "3/5",
+  "per_field_accuracy": {
+   "equipment_id": "13/14",
+   "work_date": "14/14",
+   "technician": "14/14",
+   "parts": "14/14",
+   "downtime_hours": "12/14",
+   "status": "11/14"
+  },
+  "median_seconds": 21.56
+ },
+ "rows": [
+  {
+   "doc": "wo01_form.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 33.69,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "PMP-104",
+    "work_date": "2026-03-03",
+    "technician": "Maria Lopez",
+    "parts": [
+     {
+      "name": "bearing",
+      "quantity": 2
+     },
+     {
+      "name": "mechanical seal",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 1.5,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "PMP-104",
+    "work_date": "March 3, 2026",
+    "technician": "Maria Lopez",
+    "parts": [
+     {
+      "name": "bearing",
+      "quantity": 2
+     },
+     {
+      "name": "mechanical seal",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 1.5,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo02_email.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 28.52,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": false
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "CMP-210",
+    "work_date": "2026-04-09",
+    "technician": "Dev Patel",
+    "parts": [
+     {
+      "name": "inlet filter",
+      "quantity": 3
+     }
+    ],
+    "downtime_hours": 0.75,
+    "status": null,
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "CMP-210",
+    "work_date": "April 9, 2026",
+    "technician": "Dev Patel",
+    "parts": [
+     {
+      "name": "inlet filters",
+      "quantity": 3
+     }
+    ],
+    "downtime_hours": 0.75,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo03_table.pdf",
+   "validated": true,
+   "attempts": 1,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 19.6,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "CNV-007",
+    "work_date": "2026-02-17",
+    "technician": "Aisha Khan",
+    "parts": [
+     {
+      "name": "Drive belt",
+      "quantity": 1
+     },
+     {
+      "name": "Roller bearing",
+      "quantity": 4
+     }
+    ],
+    "downtime_hours": 3.0,
+    "status": "follow_up_required",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "CNV-007",
+    "work_date": "2026-02-17",
+    "technician": "Aisha Khan",
+    "parts": [
+     {
+      "name": "Drive belt",
+      "quantity": 1
+     },
+     {
+      "name": "Roller bearing",
+      "quantity": 4
+     }
+    ],
+    "downtime_hours": 3,
+    "status": "follow_up_required",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo04_no_tech.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 39.43,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "GEN-02",
+    "work_date": "2026-05-12",
+    "technician": null,
+    "parts": [
+     {
+      "name": "fuel filter",
+      "quantity": 1
+     },
+     {
+      "name": "air filter",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 2.0,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "GEN-02",
+    "work_date": "05/12/2026",
+    "technician": null,
+    "parts": [
+     {
+      "name": "fuel filter",
+      "quantity": 1
+     },
+     {
+      "name": "air filter",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 2,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo05_ordered_only.pdf",
+   "validated": true,
+   "attempts": 1,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 18.78,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "HYD-55",
+    "work_date": "2026-01-28",
+    "technician": "Tom Becker",
+    "parts": [
+     {
+      "name": "pressure hose",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 1.0,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "HYD-55",
+    "work_date": "2026-01-28",
+    "technician": "Tom Becker",
+    "parts": [
+     {
+      "name": "pressure hose",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 1,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo06_words.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 41.74,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "CH-12",
+    "work_date": "2026-06-02",
+    "technician": "Grace Kim",
+    "parts": [
+     {
+      "name": "V-belt",
+      "quantity": 3
+     },
+     {
+      "name": "gasket",
+      "quantity": 2
+     }
+    ],
+    "downtime_hours": 1.5,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "CH-12",
+    "work_date": "June 2, 2026",
+    "technician": "Grace Kim",
+    "parts": [
+     {
+      "name": "V-belt",
+      "quantity": 3
+     },
+     {
+      "name": "gasket",
+      "quantity": 2
+     }
+    ],
+    "downtime_hours": 1.5,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo07_two_machines.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 40.04,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "PMP-221",
+    "work_date": "2026-07-15",
+    "technician": "Omar Haddad",
+    "parts": [
+     {
+      "name": "impeller",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 2.5,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "PMP-221",
+    "work_date": "July 15, 2026",
+    "technician": "Omar Haddad",
+    "parts": [
+     {
+      "name": "impeller",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 2.5,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo08_follow_up.pdf",
+   "validated": true,
+   "attempts": 1,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": true,
+   "seconds": 16.24,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": false
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": false
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "BLR-01",
+    "work_date": "2026-08-04",
+    "technician": "Lena Fischer",
+    "parts": [
+     {
+      "name": "thermocouple",
+      "quantity": 2
+     }
+    ],
+    "downtime_hours": 6.0,
+    "status": null,
+    "needs_human_review": true
+   },
+   "first_reply": {
+    "equipment_id": "BLR-01",
+    "work_date": "2026-08-04",
+    "technician": "Lena Fischer",
+    "parts": [
+     {
+      "name": "thermocouple",
+      "quantity": 2
+     }
+    ],
+    "downtime_hours": 6,
+    "status": null,
+    "needs_human_review": true
+   }
+  },
+  {
+   "doc": "wo09_no_downtime.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 32.79,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "FAN-33",
+    "work_date": "2026-09-22",
+    "technician": "Sam Rivera",
+    "parts": [
+     {
+      "name": "motor capacitor",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "FAN-33",
+    "work_date": "September 22, 2026",
+    "technician": "Sam Rivera",
+    "parts": [
+     {
+      "name": "motor capacitor",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo10_inspection.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": false,
+   "seconds": 20.03,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": false,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": false,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "CRN-03",
+    "work_date": "2026-10-06",
+    "technician": "Priya Nair",
+    "parts": [],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": false
+   },
+   "first_reply": {
+    "equipment_id": "CRN-03",
+    "work_date": "October 6, 2026",
+    "technician": "Priya Nair",
+    "parts": [],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo11_no_date.pdf",
+   "validated": true,
+   "attempts": 1,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": true,
+   "seconds": 10.27,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "MIX-08",
+    "work_date": null,
+    "technician": "Carlos Mendes",
+    "parts": [
+     {
+      "name": "agitator shaft seal",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 4.0,
+    "status": "resolved",
+    "needs_human_review": true
+   },
+   "first_reply": {
+    "equipment_id": "MIX-08",
+    "work_date": null,
+    "technician": "Carlos Mendes",
+    "parts": [
+     {
+      "name": "agitator shaft seal",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": 4,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo12_terse.pdf",
+   "validated": true,
+   "attempts": 1,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": true,
+   "seconds": 13.8,
+   "final_ok": {
+    "equipment_id": false,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": false,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": false,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": false,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": null,
+    "work_date": "2026-11-03",
+    "technician": "J. Okafor",
+    "parts": [
+     {
+      "name": "vibration sensor",
+      "quantity": 2
+     },
+     {
+      "name": "coupling insert",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": true
+   },
+   "first_reply": {
+    "equipment_id": null,
+    "work_date": "2026-11-03",
+    "technician": "J. Okafor",
+    "parts": [
+     {
+      "name": "vibration sensor",
+      "quantity": 2
+     },
+     {
+      "name": "coupling insert",
+      "quantity": 1
+     }
+    ],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo13_no_equipment.pdf",
+   "validated": true,
+   "attempts": 2,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": true,
+   "seconds": 21.56,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": false,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": true
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": null,
+    "work_date": "2026-04-20",
+    "technician": "Hannah Cole",
+    "parts": [
+     {
+      "name": "light fixture",
+      "quantity": 6
+     }
+    ],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": true
+   },
+   "first_reply": {
+    "equipment_id": null,
+    "work_date": "April 20, 2026",
+    "technician": "Hannah Cole",
+    "parts": [
+     {
+      "name": "light fixture",
+      "quantity": 6
+     }
+    ],
+    "downtime_hours": null,
+    "status": "resolved",
+    "needs_human_review": false
+   }
+  },
+  {
+   "doc": "wo14_unresolved_no_parts.pdf",
+   "validated": true,
+   "attempts": 1,
+   "fallback": false,
+   "errors": [],
+   "needs_human_review": true,
+   "seconds": 9.89,
+   "final_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": false
+   },
+   "first_ok": {
+    "equipment_id": true,
+    "work_date": true,
+    "technician": true,
+    "parts": true,
+    "downtime_hours": true,
+    "status": false
+   },
+   "final_invented": [],
+   "first_invented": [],
+   "final": {
+    "equipment_id": "ELV-1",
+    "work_date": "2026-05-30",
+    "technician": "Ben Ortiz",
+    "parts": [],
+    "downtime_hours": 8.0,
+    "status": "resolved",
+    "needs_human_review": true
+   },
+   "first_reply": {
+    "equipment_id": "ELV-1",
+    "work_date": "2026-05-30",
+    "technician": "Ben Ortiz",
+    "parts": [],
+    "downtime_hours": 8,
+    "status": "resolved",
+    "needs_human_review": true
+   }
+  }
+ ]
+}
