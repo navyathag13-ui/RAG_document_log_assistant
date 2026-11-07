@@ -13,6 +13,7 @@ Built around the AI-103 (Azure AI Apps and Agents Developer Associate) syllabus.
 - **Azure AI Content Safety** screening plus a groundedness check on answers
 - **Document field extraction** (`POST /extract`): pulls equipment ID, date, technician, parts, downtime and status out of a work-order PDF as JSON, checks every value against the document text and flags anything it can't verify for human review
 - **Schema-validated answers**: `/ask` and `/agent` return a Pydantic-validated JSON object (answer, cited chunk IDs, confidence, needs-human-review) via Azure OpenAI structured outputs, with a retry and a flagged fallback when validation fails
+- The same agent built twice, on **Semantic Kernel** and on **LangChain**, and scored head to head on 21 labeled tool-choice questions (both 41 of 42 turns correct; Semantic Kernel faster)
 - An **MCP server** that exposes the agent's two tools to any MCP client
 - A **Gradio demo UI** (Ask, Agent and Documents tabs) that calls the same API endpoints, so demos go through the same validation and safety checks
 - Still fully usable **offline** with no cloud services at all
@@ -35,7 +36,7 @@ I started with a plain FastAPI and ChromaDB search service, then grew it into so
 | Retrieval | ChromaDB (vector store), sentence-transformers `all-MiniLM-L6-v2` embeddings, `rank-bm25` for keyword search, hybrid blending of the two |
 | Document loading | `pypdf` for PDFs, plus plain text, Markdown and logs |
 | Answers | Azure OpenAI (`gpt-4.1-mini` deployment), Amazon Bedrock through its OpenAI-compatible endpoint (`BEDROCK_*` settings; unit-tested but not yet run against a live AWS account), plain OpenAI as a fallback, and an offline mode that returns the retrieved passages when no model is configured |
-| Agent | Semantic Kernel with real function calling (search documents, check equipment status, ask a clarifying question) |
+| Agent | Semantic Kernel with real function calling (search documents, check equipment status, ask a clarifying question), plus the same agent on LangChain for a head-to-head comparison |
 | Structured output | Azure OpenAI structured outputs (`json_schema`, strict) checked again by a Pydantic model that also rejects citations the model was never shown |
 | Tool protocol | An MCP server (official `mcp` Python SDK, stdio) exposing the same two tools |
 | Safety | Azure AI Content Safety on inputs and outputs, plus a word-overlap groundedness check |
@@ -58,7 +59,8 @@ Everything here was run on my own laptop (Apple M4, 10 cores, 16 GB). The raw nu
 | Does the model's structured output validate? | On the 15 benchmark questions against the live `gpt-4.1-mini` deployment (2026-10-24), 15 of 15 `/ask` answers and 15 of 15 `/agent` answers passed schema and citation validation on the first attempt, so the retry and fallback weren't needed. Every `/ask` answer cited at least one chunk from the expected document. Raw results in [`bench/structured_output_results.json`](bench/structured_output_results.json). |
 | Can an MCP client use the tools? | Yes. A Python MCP client started the server over stdio, listed both tools and called each one ([`bench/mcp_stdio_check.py`](bench/mcp_stdio_check.py)). |
 | Does field extraction work? | Yes, on 20 labeled work-order PDFs I wrote (see [Field extraction](#post-extract-work-order-fields) below). With `gpt-4.1-mini` every field was right on 14 of 14 tuning documents and on 6 of 6 held-out documents written after tuning, with no invented values. |
-| Are there automated tests? | Yes: 74 pytest tests (field extraction and its grounding checks, text splitting, file loading, safety and groundedness checks, answer scoring, structured-output validation with its retry and fallback, the MCP server through a real MCP client session, the Gradio UI handlers and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
+| Does the agent pick the right tool, and does the framework matter? | I scored it on 21 labeled questions (8 documentation, 5 equipment status, 4 needing both, 4 too vague to answer without a clarifying question), 2 runs each, with the agent built on Semantic Kernel and again on LangChain sharing the same prompt, tools, response format and validation. Both chose the right tools on 41 of 42 turns and returned valid JSON on 42 of 42; the one miss for each was the same question, answered without searching. Semantic Kernel was faster (median 7.6 s per turn vs 11.5 s). Details in [Comparing Semantic Kernel and LangChain](#comparing-semantic-kernel-and-langchain). |
+| Are there automated tests? | Yes: 80 pytest tests (the LangChain agent's tool loop with a scripted model, field extraction and its grounding checks, text splitting, file loading, safety and groundedness checks, answer scoring, structured-output validation with its retry and fallback, the MCP server through a real MCP client session, the Gradio UI handlers and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
 
 While writing the tests I found and fixed a real bug: a long log with no blank lines or sentence punctuation used to become a single 24,579-character chunk. It now splits into 50 chunks under 550 characters, and the sample documents chunk exactly as before.
 
@@ -473,7 +475,7 @@ Every tool invocation is captured by a Semantic Kernel `FUNCTION_INVOCATION` fil
 
 Verified live on 2026-09-21 against a real Azure OpenAI deployment (`gpt-4.1-mini`, GlobalStandard, North Central US, an Azure for Students subscription) and a real Azure AI Content Safety resource (F0 tier):
 
-- **Real function calling, with different decisions per query.** Four agent queries, four different behaviours: a how-to question called only `documents.search_documents`; a status question called only `equipment.check_equipment_status`; a vague question ("It keeps failing, what do I do?") called **no tool** and asked a clarifying question; a compound question called **both**, in sequence. Each tool call, its arguments and its result were captured in the `tool_calls` trace. These are four hand-picked queries that show the decision-making; a scored tool-selection evaluation is the natural next step.
+- **Real function calling, with different decisions per query.** Four agent queries, four different behaviours: a how-to question called only `documents.search_documents`; a status question called only `equipment.check_equipment_status`; a vague question ("It keeps failing, what do I do?") called **no tool** and asked a clarifying question; a compound question called **both**, in sequence. Each tool call, its arguments and its result were captured in the `tool_calls` trace. These are four hand-picked queries that show the decision-making; the scored tool-selection evaluation that followed is in the next section.
 - **`/ask` through Azure OpenAI** returned a synthesised, cited answer (`llm_provider: azure_openai`).
 - **Content Safety is a real call.** A violent input was rejected with HTTP 400 by the live service; a benign query and its answer returned severity 0 in all four categories.
 - The offline fallback, provider resolution, graceful failure on a bad key, Azure Monitor wiring and every v2 feature were also verified earlier (see above).
@@ -483,6 +485,34 @@ Findings from that live run, and what was done:
 - The groundedness check first compared answers to the 300-character *display* excerpt of each tool result, so correct answers scored 0.10-0.14 overlap and were flagged. Fixed to compare against the full tool output (correct answers then scored 0.50 and 0.77).
 - **Tuning opportunity:** a short, correct paraphrase of a JSON tool result (the equipment-status answer) scores 0.20 and is flagged `grounded: false`. That is how a word-overlap heuristic behaves; I kept it as measured, and a semantic entailment check is the upgrade path.
 - **Retrieval note:** asked "what does WARN-T01 mean", the agent's search query didn't surface the passage explaining the code even though the sample documents mention it, and the agent said so instead of inventing an answer. Code-like tokens are where keyword search shines, so pointing the agent's search tool at the hybrid retriever (`use_hybrid`, already implemented) is the next improvement.
+
+### Comparing Semantic Kernel and LangChain
+
+To find out whether the agent framework changes the agent's decisions, I built the same agent a second time on LangChain ([`app/services/agent_langchain.py`](app/services/agent_langchain.py)). Everything except the framework is shared: the system prompt, both tools (the same Python methods), the JSON response format and the validate-and-retry loop. The LangChain tool loop is written out explicitly with `bind_tools()` rather than hidden in a prebuilt agent, and it stops after 5 tool rounds, matching Semantic Kernel's default.
+
+[`bench/agent_framework_eval.py`](bench/agent_framework_eval.py) runs both agents on the 21 labeled questions in [`bench/agent_tool_questions.json`](bench/agent_tool_questions.json), alternating which framework goes first. A turn counts as correct when the set of tools it called matches the label exactly, and a question that is too vague must get a clarifying question with no tool call.
+
+Live results, `gpt-4.1-mini` on Azure OpenAI, 2 runs (2026-11-07):
+
+| | Semantic Kernel | LangChain |
+|---|---|---|
+| Right tools chosen | 41 / 42 | 41 / 42 |
+| Documentation questions | 15 / 16 | 15 / 16 |
+| Equipment status questions | 10 / 10 | 10 / 10 |
+| Questions needing both tools | 8 / 8 | 8 / 8 |
+| Vague questions (clarify, no tool) | 8 / 8 | 8 / 8 |
+| Valid JSON answers | 42 / 42 | 42 / 42 (2 after the retry) |
+| Median seconds per turn | 7.6 | 11.5 |
+| Slowest turn | 23.3 s | 72.6 s |
+
+Raw rows are in [`bench/agent_framework_results.json`](bench/agent_framework_results.json).
+
+What I took from it:
+
+- **The framework didn't change the decisions.** Both picked the right tools on 41 of 42 turns, and both missed the same question ("What is the maximum flow rate the system can sustain?"), answering it without searching. The prompt and the model matter more here than the framework.
+- **The defaults did change the reliability.** On my first full run, 4 of 42 LangChain turns hung until my 120-second cutoff while Semantic Kernel had none. LangChain's chat models default to `timeout=None` and `max_retries=None`, while Semantic Kernel inherits the OpenAI SDK's defaults, which retry. After I set an explicit 60-second timeout and 2 retries, LangChain completed every turn. That first run is kept in [`bench/agent_framework_results_no_timeout.json`](bench/agent_framework_results_no_timeout.json).
+- **Semantic Kernel was faster on this setup** (median 7.6 s vs 11.5 s). I measured it but didn't profile why, so I'm not claiming a cause.
+- With equal results, I kept Semantic Kernel as the agent behind `POST /agent`. The LangChain version stays as a tested second implementation and the baseline for this comparison.
 
 **Deployment:** the Azure OpenAI and Content Safety resources used here were created by hand in Cloud Shell, and `deploy/azure_setup.sh` plus the Container Apps rollout are ready to run end to end as the next step.
 

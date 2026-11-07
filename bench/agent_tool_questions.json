@@ -1,0 +1,27 @@
+{
+  "description": "Labeled tool-choice set for comparing agent frameworks. expected_tools is the set of tools a correct turn calls; an empty list means the right move is one clarifying question with no tool call.",
+  "version": "1.0",
+  "questions": [
+    {"id": "t01", "category": "docs", "question": "What should I check first if the hydraulic pump overheats?", "expected_tools": ["search_documents"]},
+    {"id": "t02", "category": "docs", "question": "What are the restart steps after a sensor communication fault (FAULT-S04)?", "expected_tools": ["search_documents"]},
+    {"id": "t03", "category": "docs", "question": "What is the maximum operating pressure for the HX-9000 system?", "expected_tools": ["search_documents"]},
+    {"id": "t04", "category": "docs", "question": "What caused the FAULT-T02 overtemperature incident described in the engineering note?", "expected_tools": ["search_documents"]},
+    {"id": "t05", "category": "docs", "question": "What are the steps for a planned shutdown of the hydraulic system?", "expected_tools": ["search_documents"]},
+    {"id": "t06", "category": "docs", "question": "What troubleshooting steps are recommended for a pressure drop alert?", "expected_tools": ["search_documents"]},
+    {"id": "t07", "category": "docs", "question": "What corrective action was taken for the loose wire termination at TB-3?", "expected_tools": ["search_documents"]},
+    {"id": "t08", "category": "docs", "question": "What is the maximum flow rate the system can sustain?", "expected_tools": ["search_documents"]},
+    {"id": "t09", "category": "status", "question": "Is HX-9000 running normally right now?", "expected_tools": ["check_equipment_status"]},
+    {"id": "t10", "category": "status", "question": "Which fault codes are active on SCU-400 at the moment?", "expected_tools": ["check_equipment_status"]},
+    {"id": "t11", "category": "status", "question": "When was PUMP-01 last serviced?", "expected_tools": ["check_equipment_status"]},
+    {"id": "t12", "category": "status", "question": "How many operating hours does HX-9000 have on it?", "expected_tools": ["check_equipment_status"]},
+    {"id": "t13", "category": "status", "question": "What is the current status of PUMP-99?", "expected_tools": ["check_equipment_status"]},
+    {"id": "t14", "category": "both", "question": "What fault is SCU-400 showing right now, and what does the troubleshooting guide say to do about it?", "expected_tools": ["check_equipment_status", "search_documents"]},
+    {"id": "t15", "category": "both", "question": "PUMP-01 has a warning active. What does that warning code mean according to the documentation?", "expected_tools": ["check_equipment_status", "search_documents"]},
+    {"id": "t16", "category": "both", "question": "Check HX-9000's current status and tell me the pre-start checks from the manual before I power it on.", "expected_tools": ["check_equipment_status", "search_documents"]},
+    {"id": "t17", "category": "both", "question": "Is SCU-400 in a fault state, and if so what was the root cause of that same fault in the engineering note?", "expected_tools": ["check_equipment_status", "search_documents"]},
+    {"id": "t18", "category": "clarify", "question": "Is the pump okay?", "expected_tools": []},
+    {"id": "t19", "category": "clarify", "question": "Why is it making that noise?", "expected_tools": []},
+    {"id": "t20", "category": "clarify", "question": "Can you check the status of the machine?", "expected_tools": []},
+    {"id": "t21", "category": "clarify", "question": "What does the fault code on it mean?", "expected_tools": []}
+  ]
+}

@@ -1,0 +1,1601 @@
+{
+  "provider": "azure_openai",
+  "model": "gpt-41-mini",
+  "run_at": "2026-11-07 15:00:22",
+  "runs": 2,
+  "questions": 21,
+  "summary": {
+    "semantic_kernel": {
+      "turns": 42,
+      "tool_choice_correct": 41,
+      "by_category": {
+        "both": "8/8",
+        "clarify": "8/8",
+        "docs": "15/16",
+        "status": "10/10"
+      },
+      "validated": 42,
+      "needed_retry": 0,
+      "llm_failures": 0,
+      "median_seconds": 7.625,
+      "mean_tool_calls": 0.98
+    },
+    "langchain": {
+      "turns": 42,
+      "tool_choice_correct": 41,
+      "by_category": {
+        "both": "8/8",
+        "clarify": "8/8",
+        "docs": "15/16",
+        "status": "10/10"
+      },
+      "validated": 42,
+      "needed_retry": 2,
+      "llm_failures": 0,
+      "median_seconds": 11.45,
+      "mean_tool_calls": 1.12
+    }
+  },
+  "rows": [
+    {
+      "framework": "semantic_kernel",
+      "id": "t01",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 2.58,
+      "answer": "First, check for restricted or blocked cooling fluid flow and verify hydraulic fluid levels and condition to ensure proper lubrication and cooling. Next, inspect the pump for mechanical faults such as",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t01",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 2.61,
+      "answer": "The first things to check if the hydraulic pump overheats are the possible causes related to fluid temperature exceeding limits. You should systematically investigate the typical root causes such as f",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t02",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 2.02,
+      "answer": "The restart steps after a sensor communication fault (FAULT-S04) are as follows: 1. Close CB-3 after confirmed sensor replacement or repair. 2. On the SCU-400, navigate to MENU > FAULTS > RESET ALL. 3",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t02",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 2.52,
+      "answer": "The restart steps after a sensor communication fault (FAULT-S04) are as follows:\n1. Close circuit breaker CB-3 after confirming the sensor replacement or repair.\n2. On the SCU-400, navigate to MENU > ",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t03",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 1.73,
+      "answer": "The maximum operating pressure for the HX-9000 system is 350 bar.",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t03",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 1.59,
+      "answer": "The maximum operating pressure for the HX-9000 system is 350 bar.",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t04",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 5,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 2,
+      "seconds": 49.05,
+      "answer": "The FAULT-T02 overtemperature incident in the HX-9000 unit at Bay 4 was caused by the fluid temperature reaching or exceeding 80 \u00b0C, which triggered an automatic pump shutdown. The unit was offline fo",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t04",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 23.3,
+      "answer": "The FAULT-T02 overtemperature incident was caused by a blown thermal fuse on the heat exchanger cooling fan circuit (fuse F-FAN1, rated 10 A). With the cooling fan stopped, the heat exchanger lost aro",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t05",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.57,
+      "answer": "The steps for a planned shutdown of the hydraulic system are as follows:\n1. Reduce system pressure to zero using the pressure-control potentiometer.\n2. Press the PUMP STOP button and allow the pump to",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t05",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.67,
+      "answer": "The planned shutdown steps for the hydraulic system are as follows:\n1. Reduce system pressure to zero using the pressure-control potentiometer.\n2. Press the PUMP STOP button and allow the pump to dece",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t06",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.57,
+      "answer": "The recommended troubleshooting steps for a pressure drop alert are as follows:\n1. Identify the root cause such as leaks or valve issues.\n2. Correct the identified root cause (e.g., repair leaks, adju",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t06",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 10.72,
+      "answer": "Recommended troubleshooting steps for a pressure drop alert are as follows:\n1. Identify the root cause of the pressure drop, such as leaks or valve issues.\n2. Repair the identified issues accordingly ",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t07",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.81,
+      "answer": "The corrective action taken for the loose wire termination at TB-3 was that the wire was re-terminated and secured with a cable tie to reduce vibration-induced loosening. This was specifically for the",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t07",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.67,
+      "answer": "The corrective action taken for the loose wire termination at TB-3 was to re-terminate the wire and secure it with a cable tie to reduce vibration-related loosening. This action was taken after the lo",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t08",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.48,
+      "answer": "The maximum flow rate the system can sustain is 120 L/min.",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t08",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [],
+      "tool_choice_correct": false,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 7.06,
+      "answer": "Could you please specify which system you are referring to?",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t09",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 8.19,
+      "answer": "The equipment HX-9000 is currently running normally. It is operational with no active fault codes.",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t09",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 8.7,
+      "answer": "The HX-9000 is currently running normally and is operational with no active fault codes.",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t10",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 8.7,
+      "answer": "The SCU-400 currently has the fault code FAULT-T02 active.",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t10",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 8.7,
+      "answer": "The active fault code on SCU-400 at the moment is FAULT-T02.",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t11",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 8.91,
+      "answer": "PUMP-01 was last serviced on 2024-03-01.",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t11",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 8.7,
+      "answer": "The pump PUMP-01 was last serviced on 2024-03-01.",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t12",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 8.81,
+      "answer": "The HX-9000 has 8420 operating hours on it.",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t12",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 8.6,
+      "answer": "The HX-9000 has 8420 operating hours on it.",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t13",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.18,
+      "answer": "There is no record or available status information for the equipment ID 'PUMP-99' in the system.",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t13",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.27,
+      "answer": "There is no record or current status information available for equipment ID PUMP-99 in the system.",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t14",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.28,
+      "answer": "The SCU-400 is currently showing fault code FAULT-T02. According to the troubleshooting guide, to resolve this fault you should: 1) Correct the identified root cause such as leak repair or valve adjus",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t14",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.32,
+      "answer": "The SCU-400 is currently showing fault code FAULT-T02. According to the troubleshooting guide, this fault relates to pressure drop issues. The recommended steps to resolve this fault are: 1) Correct t",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t15",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.38,
+      "answer": "PUMP-01 currently has a warning code WARN-T01 active. According to the documentation, WARN-T01 indicates that the fluid temperature has exceeded 70 \u00b0C. This is a warning condition suggesting potential",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t15",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 2,
+      "seconds": 17.87,
+      "answer": "The warning code WARN-T01 for PUMP-01 indicates that the fluid temperature exceeds 70 \u00b0C. This warning means the pump is signaling a higher fluid temperature but has not reached the stop threshold (wh",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t16",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 4,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 25.4,
+      "answer": "The HX-9000 unit is currently operational with no active fault codes and its last maintenance was on 2024-02-15. The pre-start checks before powering on the HX-9000 hydraulic system typically include ",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t16",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 15.71,
+      "answer": "The current status of the HX-9000 is operational, with no active fault codes reported and the last maintenance date being 2024-02-15. According to the manual, the pre-start checks before powering on H",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t17",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 13.32,
+      "answer": "Yes, SCU-400 is currently in a fault state with fault code FAULT-T02. According to the engineering note in the troubleshooting guide, this fault likely relates to a localized pressure drop and heat bu",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t17",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.42,
+      "answer": "The SCU-400 is currently in a fault state with the fault code FAULT-T02. According to the engineering troubleshooting guide, this fault is related to a pressure drop issue causing heat buildup. The ro",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t18",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 61.43,
+      "answer": "Could you please specify the equipment ID or name of the pump you are referring to?",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t18",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.77,
+      "answer": "Could you please specify which pump you are referring to by providing its equipment ID?",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t19",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.87,
+      "answer": "Could you please specify which equipment or machine you are referring to that is making the noise?",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t19",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.85,
+      "answer": "Could you please specify which equipment you are referring to and describe the noise? This will help me provide a more accurate answer.",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t20",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.77,
+      "answer": "Could you please specify the equipment ID of the machine you want me to check?",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t20",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.82,
+      "answer": "Could you please provide the equipment ID or name of the machine you want me to check the status for?",
+      "run": 1
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t21",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.82,
+      "answer": "Could you please specify the equipment ID or the exact fault code you are referring to?",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t21",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.82,
+      "answer": "Could you please specify the equipment ID or the exact fault code you are referring to?",
+      "run": 1
+    },
+    {
+      "framework": "langchain",
+      "id": "t01",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 2.19,
+      "answer": "The first things to check if the hydraulic pump overheats are the fluid temperature, which should not exceed 70 \u00b0C (WARN-T01) or 80 \u00b0C (FAULT-T02), and then systematically investigate possible causes ",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t01",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 2.15,
+      "answer": "The first things to check if the hydraulic pump overheats are the possible causes listed in the troubleshooting guide. The guide suggests systematically working through the common issues leading to ov",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t02",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 8.87,
+      "answer": "The restart steps after a sensor communication fault (FAULT-S04) are as follows:\n1. Close circuit breaker CB-3 after the sensor has been replaced or repaired.\n2. On the SCU-400, navigate through the m",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t02",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.8,
+      "answer": "The restart steps after a sensor communication fault (FAULT-S04) are as follows:\n1. Close CB-3 after confirmed sensor replacement or repair.\n2. On the SCU-400, navigate to MENU > FAULTS > RESET ALL.\n3",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t03",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 72.59,
+      "answer": "The maximum operating pressure for the HX-9000 system is 350 bar.",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t03",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 1.72,
+      "answer": "The maximum operating pressure for the HX-9000 system is 350 bar.",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t04",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 2.13,
+      "answer": "The FAULT-T02 overtemperature incident was caused by a blown thermal fuse on the heat exchanger cooling fan circuit (fuse F-FAN1, rated 10 A). With the fan stopped, the heat exchanger lost approximate",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t04",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 1.99,
+      "answer": "The FAULT-T02 overtemperature incident was caused by a blown thermal fuse on the heat exchanger cooling fan circuit (fuse F-FAN1, rated 10 A). With the cooling fan stopped, the heat exchanger lost app",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t05",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 1.89,
+      "answer": "The planned shutdown procedure for the hydraulic system is as follows: 1. Reduce system pressure to zero using the pressure-control potentiometer. 2. Press the PUMP STOP button and allow the pump to d",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t05",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 1.91,
+      "answer": "The steps for a planned shutdown of the hydraulic system are:\n1. Reduce the system pressure to zero using the pressure-control potentiometer.\n2. Press the PUMP STOP button and allow the pump to decele",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t06",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 2.97,
+      "answer": "Recommended troubleshooting steps for a pressure drop alert are: 1) Identify the root cause such as leaks or valve issues and correct them. 2) On the SCU-400 controller, clear the active faults via ME",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t06",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.07,
+      "answer": "Recommended troubleshooting steps for a pressure drop alert include: 1. Identify and correct the root cause such as repairing leaks or adjusting valves. 2. On SCU-400 system, clear the active faults v",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t07",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.76,
+      "answer": "The corrective action taken for the loose wire termination at TB-3 was that the wire was re-terminated and secured with a cable tie to reduce vibration-related loosening.",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t07",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.96,
+      "answer": "The corrective action taken for the loose wire termination at TB-3 was to re-terminate the loose connection. This was confirmed by a maintenance log entry that stated Terminal TB-3 pin 7 was found loo",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t08",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.95,
+      "answer": "The maximum flow rate the system can sustain is 120 L/min.",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t08",
+      "category": "docs",
+      "expected": [
+        "search_documents"
+      ],
+      "called": [],
+      "tool_choice_correct": false,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 6.03,
+      "answer": "Could you please specify which system you are referring to?",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t09",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.08,
+      "answer": "Yes, HX-9000 is currently running normally. Its status is operational with no active fault codes reported.",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t09",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.01,
+      "answer": "The equipment HX-9000 is currently operational with no active fault codes, indicating it is running normally right now.",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t10",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.83,
+      "answer": "The currently active fault code on SCU-400 is FAULT-T02.",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t10",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.29,
+      "answer": "The active fault code on SCU-400 at the moment is FAULT-T02.",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t11",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 62.33,
+      "answer": "PUMP-01 was last serviced on 2024-03-01.",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t11",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 1.57,
+      "answer": "PUMP-01 was last serviced on 2024-03-01.",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t12",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 1.95,
+      "answer": "The equipment HX-9000 has 8420 operating hours on it.",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t12",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 1.52,
+      "answer": "The HX-9000 has 8,420 operating hours on it.",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t13",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 1.91,
+      "answer": "There is no current status information available for PUMP-99. It appears this equipment ID does not exist in the system.",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t13",
+      "category": "status",
+      "expected": [
+        "check_equipment_status"
+      ],
+      "called": [
+        "check_equipment_status"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 1,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 2.7,
+      "answer": "There is no record or available status information for equipment ID PUMP-99 in the system.",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t14",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.21,
+      "answer": "The equipment SCU-400 is currently showing fault code FAULT-T02. According to the troubleshooting guide, FAULT-T02 is related to overtemperature. The recommended action is to investigate and address c",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t14",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.05,
+      "answer": "The SCU-400 is currently showing fault code FAULT-T02. According to the troubleshooting guide, after identifying the root cause of the fault (such as leak repair, valve adjustment, etc.), you should c",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t15",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.57,
+      "answer": "The warning code for PUMP-01 is WARN-T01, which according to the documentation means that the fluid temperature exceeds 70 \u00b0C. This warning indicates the pump may have stopped automatically to prevent",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t15",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.4,
+      "answer": "The warning code WARN-T01 for PUMP-01 means that the fluid temperature has exceeded 70 \u00b0C. It is a warning condition indicating that the pump may have stopped automatically if the temperature continue",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t16",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 11.89,
+      "answer": "The current status of HX-9000 is operational with no active fault codes. The last maintenance was done on 2024-02-15, and it has logged 8420 operating hours.\n\nAccording to the HX-9000 Series Hydraulic",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t16",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 12.36,
+      "answer": "The current status of HX-9000 is operational with no active fault codes. The last maintenance was on 2024-02-15, and it has accumulated 8420 operating hours.\n\nThe pre-start checks from the manual befo",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t17",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 63.15,
+      "answer": "The SCU-400 is currently in a fault state with the active fault code FAULT-T02. According to the engineering notes, this fault is associated with a localized pressure drop and heat buildup. The recomm",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t17",
+      "category": "both",
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "called": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "tool_choice_correct": true,
+      "n_tool_calls": 2,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 2.45,
+      "answer": "SCU-400 is currently in a fault state with fault code FAULT-T02. According to the engineering note, this fault is related to a localized pressure drop and heat buildup issue. The root cause typically ",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t18",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.81,
+      "answer": "Could you please specify the ID or name of the pump you are referring to?",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t18",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.78,
+      "answer": "Could you please specify the equipment ID of the pump you are referring to?",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t19",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.83,
+      "answer": "Could you please specify which equipment or device you are referring to?",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t19",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.93,
+      "answer": "Could you please specify which equipment or machine you are referring to so I can assist you better with the noise issue?",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t20",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.91,
+      "answer": "Could you please specify the equipment ID of the machine you want to check?",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t20",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.8,
+      "answer": "Please provide the specific equipment ID of the machine you want to check the status for.",
+      "run": 2
+    },
+    {
+      "framework": "langchain",
+      "id": "t21",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.94,
+      "answer": "Could you please specify the equipment ID or the exact fault code you are referring to?",
+      "run": 2
+    },
+    {
+      "framework": "semantic_kernel",
+      "id": "t21",
+      "category": "clarify",
+      "expected": [],
+      "called": [],
+      "tool_choice_correct": true,
+      "n_tool_calls": 0,
+      "llm_ok": true,
+      "validated": true,
+      "attempts": 1,
+      "seconds": 0.81,
+      "answer": "Could you please specify the equipment ID or type so I can check the relevant fault code information?",
+      "run": 2
+    }
+  ]
+}

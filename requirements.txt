@@ -15,6 +15,9 @@ rank-bm25>=0.2.2
 
 # Agent orchestration (Phase 2)
 semantic-kernel>=1.18.0
+# Second agent implementation, used to compare frameworks (bench/agent_framework_eval.py)
+langchain-core>=1.0.0
+langchain-openai>=1.0.0
 
 # Responsible AI safeguards (Phase 3)
 azure-ai-contentsafety>=1.0.0
