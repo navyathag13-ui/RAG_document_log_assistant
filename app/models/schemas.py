@@ -100,6 +100,8 @@ class AskQuery(BaseModel):
         default=True,
         description="Automatically score the answer after generation."
     )
+    session_id: Optional[str] = Field(default=None, max_length=100,
+                                      description="Groups turns into one conversation in the MongoDB history")
 
 
 class SourceChunk(BaseModel):
@@ -194,6 +196,7 @@ class AskResponse(BaseModel):
     # v4: schema-validated output (answer above == structured.answer)
     structured: Optional[StructuredAnswer] = None
     structured_meta: Optional[StructuredMeta] = None
+    turn_id: Optional[str] = Field(default=None, description="ID of the saved turn in the MongoDB history, when enabled")
 
 
 # ── Delete ────────────────────────────────────────────────────────────────────
@@ -387,6 +390,8 @@ class BenchmarkRunResponse(BaseModel):
 
 class AgentQuery(BaseModel):
     query: str = Field(..., min_length=1, description="Natural-language request for the agent")
+    session_id: Optional[str] = Field(default=None, max_length=100,
+                                      description="Groups turns into one conversation in the MongoDB history")
 
 
 class AgentToolCall(BaseModel):
@@ -406,3 +411,4 @@ class AgentResponse(BaseModel):
     groundedness: Optional[GroundednessResult] = None
     structured: Optional[StructuredAnswer] = None
     structured_meta: Optional[StructuredMeta] = None
+    turn_id: Optional[str] = Field(default=None, description="ID of the saved turn in the MongoDB history, when enabled")

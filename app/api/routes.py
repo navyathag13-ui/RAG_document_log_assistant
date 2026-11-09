@@ -23,6 +23,9 @@ from app.models.schemas import (
     SearchQuery,
     SearchResponse,
 )
+from fastapi.concurrency import run_in_threadpool
+
+from app.db.conversation_store import Timer, get_store
 from app.services import extraction_service, ingest_service, llm_service, qa_service, retrieval_service, vector_store
 from app.services.extraction_service import ExtractResponse
 from app.utils.file_loader import SUPPORTED_EXTENSIONS, load_file
@@ -186,18 +189,39 @@ async def ask(body: AskQuery):
     docstring and bench/README.md for the measured before/after).
     """
     try:
-        response = await qa_service.answer_async(
-            body.question,
-            top_k=body.top_k,
-            template_id=body.template_id,
-            auto_evaluate=body.auto_evaluate,
-        )
+        with Timer() as timer:
+            response = await qa_service.answer_async(
+                body.question,
+                top_k=body.top_k,
+                template_id=body.template_id,
+                auto_evaluate=body.auto_evaluate,
+            )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     except Exception as exc:
         logger.exception("Unexpected error during /ask")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
 
+    store = get_store()
+    if store.enabled:
+        saved = await run_in_threadpool(
+            store.record_turn,
+            endpoint="ask",
+            session_id=body.session_id,
+            query=body.question,
+            answer=response.answer,
+            llm_provider=response.llm_provider,
+            latency_ms=timer.ms,
+            cited_chunk_ids=(response.structured.cited_chunk_ids if response.structured
+                             else [s.chunk_id for s in response.sources]),
+            input_flagged=bool(response.input_safety and response.input_safety.flagged),
+            output_flagged=bool(response.output_safety and response.output_safety.flagged),
+            grounded=response.groundedness_flag.grounded if response.groundedness_flag else None,
+            structured_validated=(response.structured_meta.validated
+                                  if response.structured_meta and response.structured_meta.mode == "llm" else None),
+            model_needs_review=bool(response.structured and response.structured.needs_human_review),
+        )
+        response.turn_id = saved.turn_id
     return response
 
 

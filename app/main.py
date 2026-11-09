@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
 from app.api.eval_routes import eval_router
 from app.api.agent_routes import agent_router
+from app.api.history_routes import history_router
 from app.core.config import settings
 from app.core.logging_config import get_logger, setup_logging
 from app.services import llm_service
@@ -90,6 +91,7 @@ app.add_middleware(
 app.include_router(router)
 app.include_router(eval_router)
 app.include_router(agent_router)
+app.include_router(history_router)
 
 logger.info(
     "Routes registered: %s",

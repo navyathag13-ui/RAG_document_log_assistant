@@ -9,6 +9,13 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+    env:
+      MONGODB_TEST_URI: mongodb://localhost:27017
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,7 +32,7 @@ jobs:
         with:
           path: ~/.cache/huggingface
           key: hf-all-MiniLM-L6-v2
-      - name: Run tests (offline, no cloud services)
+      - name: Run tests (offline, no cloud services; real MongoDB for the history tests)
         run: python -m pytest tests -q
 
   docker-build:

@@ -14,5 +14,6 @@ for key in (
     "AZURE_CONTENT_SAFETY_ENDPOINT",
     "AZURE_CONTENT_SAFETY_KEY",
     "APPLICATIONINSIGHTS_CONNECTION_STRING",
+    "MONGODB_URI",
 ):
     os.environ[key] = ""

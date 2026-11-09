@@ -63,6 +63,13 @@ class Settings(BaseSettings):
     AZURE_CONTENT_SAFETY_KEY: str = ""
     CONTENT_SAFETY_SEVERITY_THRESHOLD: int = 4   # 0,2,4,6 per Azure's scale; block at >= this
 
+    # ── MongoDB conversation history (optional) ────────────────────────────────
+    # When set, every /ask and /agent turn is saved (app/db/conversation_store.py)
+    # and GET /history/... is available. Unset = no history, app unchanged.
+    MONGODB_URI: str = ""                 # e.g. mongodb://localhost:27017
+    MONGODB_DB: str = "rag_assistant"
+    MONGODB_TIMEOUT_MS: int = 2000        # fail fast if MongoDB is down; the request still succeeds
+
     # ── Azure Monitor / Application Insights (optional) ─────────────────────────
     APPLICATIONINSIGHTS_CONNECTION_STRING: str = ""
 

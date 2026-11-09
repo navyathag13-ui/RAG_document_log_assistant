@@ -15,6 +15,7 @@ Built around the AI-103 (Azure AI Apps and Agents Developer Associate) syllabus.
 - **Schema-validated answers**: `/ask` and `/agent` return a Pydantic-validated JSON object (answer, cited chunk IDs, confidence, needs-human-review) via Azure OpenAI structured outputs, with a retry and a flagged fallback when validation fails
 - The same agent built twice, on **Semantic Kernel** and on **LangChain**, and scored head to head on 21 labeled tool-choice questions (both 41 of 42 turns correct; Semantic Kernel faster)
 - An **MCP server** that exposes the agent's two tools to any MCP client
+- **Conversation history and agent traces in MongoDB**: every `/ask` and `/agent` turn is saved with its tool calls, citations, safety and groundedness results, plus a review queue and aggregation-pipeline stats ([details](#conversation-history-in-mongodb))
 - A **Gradio demo UI** (Ask, Agent and Documents tabs) that calls the same API endpoints, so demos go through the same validation and safety checks
 - Still fully usable **offline** with no cloud services at all
 - Measured retrieval quality: the right source document at rank 1 for 93.3% of benchmark questions with hybrid search
@@ -37,6 +38,7 @@ I started with a plain FastAPI and ChromaDB search service, then grew it into so
 | Document loading | `pypdf` for PDFs, plus plain text, Markdown and logs |
 | Answers | Azure OpenAI (`gpt-4.1-mini` deployment), Amazon Bedrock through its OpenAI-compatible endpoint (`BEDROCK_*` settings; unit-tested but not yet run against a live AWS account), plain OpenAI as a fallback, and an offline mode that returns the retrieved passages when no model is configured |
 | Agent | Semantic Kernel with real function calling (search documents, check equipment status, ask a clarifying question), plus the same agent on LangChain for a head-to-head comparison |
+| History | MongoDB (`pymongo`): one document per turn, indexes on session and endpoint, aggregation pipelines for stats; optional, off when `MONGODB_URI` is unset |
 | Structured output | Azure OpenAI structured outputs (`json_schema`, strict) checked again by a Pydantic model that also rejects citations the model was never shown |
 | Tool protocol | An MCP server (official `mcp` Python SDK, stdio) exposing the same two tools |
 | Safety | Azure AI Content Safety on inputs and outputs, plus a word-overlap groundedness check |
@@ -60,7 +62,8 @@ Everything here was run on my own laptop (Apple M4, 10 cores, 16 GB). The raw nu
 | Can an MCP client use the tools? | Yes. A Python MCP client started the server over stdio, listed both tools and called each one ([`bench/mcp_stdio_check.py`](bench/mcp_stdio_check.py)). |
 | Does field extraction work? | Yes, on 20 labeled work-order PDFs I wrote (see [Field extraction](#post-extract-work-order-fields) below). With `gpt-4.1-mini` every field was right on 14 of 14 tuning documents and on 6 of 6 held-out documents written after tuning, with no invented values. |
 | Does the agent pick the right tool, and does the framework matter? | I scored it on 21 labeled questions (8 documentation, 5 equipment status, 4 needing both, 4 too vague to answer without a clarifying question), 2 runs each, with the agent built on Semantic Kernel and again on LangChain sharing the same prompt, tools, response format and validation. Both chose the right tools on 41 of 42 turns and returned valid JSON on 42 of 42; the one miss for each was the same question, answered without searching. Semantic Kernel was faster (median 7.6 s per turn vs 11.5 s). Details in [Comparing Semantic Kernel and LangChain](#comparing-semantic-kernel-and-langchain). |
-| Are there automated tests? | Yes: 80 pytest tests (the LangChain agent's tool loop with a scripted model, field extraction and its grounding checks, text splitting, file loading, safety and groundedness checks, answer scoring, structured-output validation with its retry and fallback, the MCP server through a real MCP client session, the Gradio UI handlers and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
+| Does the MongoDB history hold up on live traffic? | Yes. The 21 labeled agent questions went through the real `/agent` endpoint on `gpt-4.1-mini` into MongoDB 7: all 21 turns read back with their tool calls exactly as returned (0 mismatches), in order, across 4 sessions. The review queue caught 2 turns, both false alarms from the safety layers (see [below](#conversation-history-in-mongodb)). |
+| Are there automated tests? | Yes: 105 pytest tests (the MongoDB history store and its API against both an in-memory MongoDB and a real MongoDB 7 server, the LangChain agent's tool loop with a scripted model, field extraction and its grounding checks, text splitting, file loading, safety and groundedness checks, answer scoring, structured-output validation with its retry and fallback, the MCP server through a real MCP client session, the Gradio UI handlers and the whole API end to end with the real embedding model and a temporary vector store). They run offline in GitHub Actions along with a Docker build. |
 
 While writing the tests I found and fixed a real bug: a long log with no blank lines or sentence punctuation used to become a single 24,579-character chunk. It now splits into 50 chunks under 550 characters, and the sample documents chunk exactly as before.
 
@@ -518,6 +521,28 @@ What I took from it:
 
 ---
 
+## Conversation history in MongoDB
+
+Every `/ask` and `/agent` turn is saved as one MongoDB document (`app/db/conversation_store.py`): the question, the answer, the provider, the chunk IDs it cited, every tool call with its arguments, the Content Safety and groundedness results, whether the structured output validated, and the latency. Pass a `session_id` to group turns into one conversation. The shapes vary a lot (an `/ask` turn has citations and no tools; an agent turn has zero to five tool calls with different arguments), which is why this is a document store and not more SQLite tables.
+
+| Endpoint | What it returns |
+|---|---|
+| `GET /history/{session_id}` | one conversation, oldest first |
+| `GET /history/review` | turns a person should look at: Content Safety flags, ungrounded answers, failed validation, or the model asking for review |
+| `GET /history/stats` | turns, average and worst latency and average tool calls per endpoint, plus calls per tool, computed by aggregation pipelines (`$group`, `$unwind`) |
+
+**Design choices.** History is optional: with `MONGODB_URI` unset the app behaves exactly as before and `/history` returns 503 (never an empty list that looks like "no traffic"). If MongoDB is configured but down, saving a turn logs a warning after a 2-second timeout and the answer is still returned, so history can never take the assistant down (tested against a closed port). Blocked inputs are saved too: a reviewer needs to see what was refused.
+
+**Live check** (`bench/history_live_check.py`, 2026-11-09, `gpt-4.1-mini`, MongoDB 7 in Docker, results in `bench/history_live_results.json`):
+
+- 21 labeled questions sent to `/agent`, 21 turns read back from MongoDB with the same tool calls, in order, across 4 sessions.
+- 20 answered; the agent chose the right tools on 20 of 20. Average 7.1 s per turn, slowest 18.1 s.
+- The review queue held 2 turns, and **both were false alarms from the safety layers**, which is exactly what the queue is for:
+  - Content Safety blocked "What are the steps for a planned shutdown of the hydraulic system?" at severity 4. A normal maintenance question; the threshold needs tuning for this domain.
+  - The word-overlap groundedness check flagged "The HX-9000 is currently operational and running normally", a correct answer reworded from the status tool's output. This is the paraphrase weakness already noted above.
+
+Tests (`tests/test_conversation_store.py`, 25): every store and API test runs against mongomock and, when `MONGODB_TEST_URI` is set, against a real MongoDB server too. GitHub Actions starts a `mongo:7` service container so CI runs both.
+
 ## Responsible AI safeguards
 
 ### Content Safety
@@ -581,6 +606,7 @@ With it unset, telemetry stays exactly what it always was: local stdout logging.
 | `AZURE_OPENAI_ENDPOINT` / `_API_KEY` / `_DEPLOYMENT` / `_API_VERSION` | _(empty)_ | Azure OpenAI — all three of endpoint/key/deployment must be set to activate; tried before plain OpenAI |
 | `AZURE_CONTENT_SAFETY_ENDPOINT` / `_KEY` | _(empty)_ | Both must be set to enable safety screening |
 | `CONTENT_SAFETY_SEVERITY_THRESHOLD` | `4` | Azure's severity scale is 0/2/4/6; flag at or above this |
+| `MONGODB_URI` | MongoDB for conversation history (e.g. `mongodb://localhost:27017`); unset = history off |
 | `APPLICATIONINSIGHTS_CONNECTION_STRING` | _(empty)_ | Enables Azure Monitor telemetry when set |
 | `CHROMA_DB_PATH` / `EXPERIMENTS_DB_PATH` | `data/chroma_db` / `data/experiments.db` | Local persistence paths |
 

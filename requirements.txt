@@ -29,5 +29,8 @@ azure-monitor-opentelemetry>=1.6.0
 # MCP server exposing the agent tools (app/mcp_server.py)
 mcp>=1.2.0
 
+# Conversation history and agent traces (app/db/conversation_store.py)
+pymongo>=4.6
+
 # Gradio demo UI (app/ui/gradio_app.py)
 gradio>=5,<6

@@ -1,0 +1,293 @@
+{
+  "run_at": "2026-11-09T17:25:30",
+  "llm_provider": "azure_openai",
+  "mongodb": "mongo:7 (Docker)",
+  "turns_sent": 21,
+  "turns_read_back": 21,
+  "blocked_by_content_safety": [
+    "t05"
+  ],
+  "blocked_turns_saved": 1,
+  "trace_mismatches": [],
+  "sessions": 4,
+  "sessions_in_order": true,
+  "stats": {
+    "by_endpoint": [
+      {
+        "endpoint": "agent",
+        "turns": 21,
+        "avg_latency_ms": 7110.6,
+        "max_latency_ms": 18145.3,
+        "avg_tool_calls": 1.0
+      }
+    ],
+    "tool_usage": [
+      {
+        "tool": "documents.search_documents",
+        "calls": 12
+      },
+      {
+        "tool": "equipment.check_equipment_status",
+        "calls": 9
+      }
+    ],
+    "review_count": 2
+  },
+  "review_queue": [
+    {
+      "query": "Is HX-9000 running normally right now?",
+      "reasons": [
+        "answer not grounded in its sources"
+      ]
+    },
+    {
+      "query": "What are the steps for a planned shutdown of the hydraulic system?",
+      "reasons": [
+        "content safety flag"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "id": "t01",
+      "session_id": "20261109-172244-docs",
+      "turn_id": "eef13fd4fea84dd68bd4ab11bb062211",
+      "tools": [
+        "documents.search_documents"
+      ],
+      "expected": [
+        "search_documents"
+      ],
+      "seconds": 3.83
+    },
+    {
+      "id": "t02",
+      "session_id": "20261109-172244-docs",
+      "turn_id": "f013d46c1f304fdea7e4bb191506e985",
+      "tools": [
+        "documents.search_documents"
+      ],
+      "expected": [
+        "search_documents"
+      ],
+      "seconds": 2.85
+    },
+    {
+      "id": "t03",
+      "session_id": "20261109-172244-docs",
+      "turn_id": "f122da50759340748a2bee6b8d12d017",
+      "tools": [
+        "documents.search_documents"
+      ],
+      "expected": [
+        "search_documents"
+      ],
+      "seconds": 2.71
+    },
+    {
+      "id": "t04",
+      "session_id": "20261109-172244-docs",
+      "turn_id": "7da370eb0dd84aafa491f30c8237d4e6",
+      "tools": [
+        "documents.search_documents"
+      ],
+      "expected": [
+        "search_documents"
+      ],
+      "seconds": 3.04
+    },
+    {
+      "id": "t05",
+      "session_id": "20261109-172244-docs",
+      "turn_id": null,
+      "tools": [],
+      "blocked": "Query flagged by content safety screening: One or more categories >= severity 4.",
+      "seconds": 0.53
+    },
+    {
+      "id": "t06",
+      "session_id": "20261109-172244-docs",
+      "turn_id": "ae60d66f3f42496c89275ea2908d3ff2",
+      "tools": [
+        "documents.search_documents"
+      ],
+      "expected": [
+        "search_documents"
+      ],
+      "seconds": 3.27
+    },
+    {
+      "id": "t07",
+      "session_id": "20261109-172244-docs",
+      "turn_id": "444a09b6b63e43b2a3dfade5b1f95c93",
+      "tools": [
+        "documents.search_documents"
+      ],
+      "expected": [
+        "search_documents"
+      ],
+      "seconds": 3.25
+    },
+    {
+      "id": "t08",
+      "session_id": "20261109-172244-docs",
+      "turn_id": "09804febb4e24871a2bb7957d94dfb2d",
+      "tools": [
+        "documents.search_documents"
+      ],
+      "expected": [
+        "search_documents"
+      ],
+      "seconds": 3.16
+    },
+    {
+      "id": "t09",
+      "session_id": "20261109-172244-status",
+      "turn_id": "fe8396975dfc4896afd3a7545807ea34",
+      "tools": [
+        "equipment.check_equipment_status"
+      ],
+      "expected": [
+        "check_equipment_status"
+      ],
+      "seconds": 9.33
+    },
+    {
+      "id": "t10",
+      "session_id": "20261109-172244-status",
+      "turn_id": "dbaa7c8595e94cc090b46072c6ae3b5a",
+      "tools": [
+        "equipment.check_equipment_status"
+      ],
+      "expected": [
+        "check_equipment_status"
+      ],
+      "seconds": 11.95
+    },
+    {
+      "id": "t11",
+      "session_id": "20261109-172244-status",
+      "turn_id": "b8dcef1ea1b34c1a9bc2961e580c5474",
+      "tools": [
+        "equipment.check_equipment_status"
+      ],
+      "expected": [
+        "check_equipment_status"
+      ],
+      "seconds": 12.26
+    },
+    {
+      "id": "t12",
+      "session_id": "20261109-172244-status",
+      "turn_id": "93783f2c0a724ca0b31e19abc135262b",
+      "tools": [
+        "equipment.check_equipment_status"
+      ],
+      "expected": [
+        "check_equipment_status"
+      ],
+      "seconds": 12.11
+    },
+    {
+      "id": "t13",
+      "session_id": "20261109-172244-status",
+      "turn_id": "ae7724cfcf5c406595ab80bcbe1817f3",
+      "tools": [
+        "equipment.check_equipment_status"
+      ],
+      "expected": [
+        "check_equipment_status"
+      ],
+      "seconds": 11.73
+    },
+    {
+      "id": "t14",
+      "session_id": "20261109-172244-both",
+      "turn_id": "5662f91806644bf98ab12eaec7190ca3",
+      "tools": [
+        "equipment.check_equipment_status",
+        "documents.search_documents"
+      ],
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "seconds": 12.67
+    },
+    {
+      "id": "t15",
+      "session_id": "20261109-172244-both",
+      "turn_id": "f168d0efb2bd47a1adda588d9444fbd5",
+      "tools": [
+        "equipment.check_equipment_status",
+        "documents.search_documents"
+      ],
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "seconds": 11.58
+    },
+    {
+      "id": "t16",
+      "session_id": "20261109-172244-both",
+      "turn_id": "fef914186c504aa6808ff3ae54a1b671",
+      "tools": [
+        "equipment.check_equipment_status",
+        "documents.search_documents",
+        "documents.search_documents"
+      ],
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "seconds": 18.58
+    },
+    {
+      "id": "t17",
+      "session_id": "20261109-172244-both",
+      "turn_id": "383f474101854a9694c45fdd7c46f0ee",
+      "tools": [
+        "equipment.check_equipment_status",
+        "documents.search_documents"
+      ],
+      "expected": [
+        "check_equipment_status",
+        "search_documents"
+      ],
+      "seconds": 11.54
+    },
+    {
+      "id": "t18",
+      "session_id": "20261109-172244-clarify",
+      "turn_id": "49ef036388d74fbc8a41375a4213e642",
+      "tools": [],
+      "expected": [],
+      "seconds": 5.54
+    },
+    {
+      "id": "t19",
+      "session_id": "20261109-172244-clarify",
+      "turn_id": "e540a9619beb4564b4365e5b8ac10b36",
+      "tools": [],
+      "expected": [],
+      "seconds": 6.99
+    },
+    {
+      "id": "t20",
+      "session_id": "20261109-172244-clarify",
+      "turn_id": "c8a087686c28420b8c2cf01ed5ec828a",
+      "tools": [],
+      "expected": [],
+      "seconds": 5.09
+    },
+    {
+      "id": "t21",
+      "session_id": "20261109-172244-clarify",
+      "turn_id": "2561b21b77e1412cb5d42c34c6a6279e",
+      "tools": [],
+      "expected": [],
+      "seconds": 7.08
+    }
+  ]
+}
